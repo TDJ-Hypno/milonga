@@ -40,10 +40,12 @@
       const maxDate = new Date(now);
       maxDate.setDate(now.getDate() + days);
 
-      const filtered = data.filter(row => {
-        const endDate = new Date(row["Data do"]);
-        return endDate >= now && endDate <= maxDate;
-      });
+      const filtered = data
+        .filter(row => {
+          const endDate = new Date(row["Data do"]);
+          return endDate >= now && endDate <= maxDate;
+        })
+        .sort((a, b) => new Date(a["Data od"]) - new Date(b["Data od"])); // sortuj rosnąco wg daty
 
       if (!map) {
         map = new google.maps.Map(document.getElementById("map"), {
@@ -57,7 +59,9 @@
       markers = [];
 
       const geocoder = new google.maps.Geocoder();
-      filtered.forEach((event) => {
+
+      // Odwróć kolejność dodawania (najbliższe na końcu – będą na wierzchu)
+      filtered.reverse().forEach((event) => {
         geocoder.geocode({ address: event.Adres }, (results, status) => {
           if (status === "OK") {
             const position = results[0].geometry.location;
@@ -77,12 +81,7 @@
               position,
               title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`,
               icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: color,
-                fillOpacity: 1,
-                strokeWeight: 1,
-                strokeColor: "#333"
+                url: `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
               }
             });
 
