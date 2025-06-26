@@ -254,7 +254,7 @@ function displayEvents(startDate, endDate) {
           icon: {
             url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
           },
-          // title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
+          title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
         });
 
         markers.push(marker);
@@ -279,13 +279,13 @@ function displayEvents(startDate, endDate) {
         `;
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        const tooltip = new google.maps.InfoWindow({
+        // const tooltip = new google.maps.InfoWindow({
           content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
         });
 
         marker.addListener("click", () => infowindow.open(map, marker));
-        marker.addListener("mouseover", () => tooltip.open(map, marker));
-        marker.addListener("mouseout", () => tooltip.close());
+        // marker.addListener("mouseover", () => tooltip.open(map, marker));
+        // marker.addListener("mouseout", () => tooltip.close());
       }
     });
   });
