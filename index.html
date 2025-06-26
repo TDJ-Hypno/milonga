@@ -242,11 +242,14 @@ function applyFilter() {
 
 function displayEvents(startDate, endDate) {
   const now = new Date();
-  const filtered = eventsData.filter(row => {
+  let filtered = eventsData;
+if (!(startDate.getFullYear() === 2000 && endDate.getFullYear() === 3000)) {
+  filtered = eventsData.filter(row => {
     const start = new Date(row["Data od"]);
     const end = new Date(row["Data do"]);
     return end >= startDate && start <= endDate;
   });
+}
 
   if (!map) {
     map = new google.maps.Map(document.getElementById("map"), {
