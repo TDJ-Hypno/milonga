@@ -90,6 +90,7 @@
     <div>
       <button id="filter-button" onclick="showModal()">Filtruj</button>
       <button id="toggle-style" onclick="toggleMapStyle()">Tryb nocny</button>
+<span id="filter-info" style="margin-left: 20px; font-size: 14px;"></span>
     </div>
     <div id="author">Opracowane przez: TDj "Hypno" Piotr Smoleń</div>
   </div>
@@ -185,21 +186,71 @@
       applyFilter();
     }
 
+    
     function applyFilter() {
       hideModal();
-
       const now = new Date();
       let start = new Date(2000, 0, 1);
       let end = new Date(3000, 0, 1);
       const filter = document.querySelector("input[name='filter']:checked").value;
+      const filterInfo = document.getElementById("filter-info");
 
-      const getNextWeekend = () => {
-        const nextSat = new Date(now);
-        nextSat.setDate(now.getDate() + (6 - now.getDay() + 7) % 7);
-        const sun = new Date(nextSat);
-        sun.setDate(nextSat.getDate() + 1);
-        return [nextSat, sun];
-      };
+      const dayOfWeek = now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7)); // Monday of current week
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+      const thisWeekendEnd = new Date(friday);
+      thisWeekendEnd.setDate(friday.getDate() + 2);
+      const nextMonday = new Date(monday);
+      nextMonday.setDate(monday.getDate() + 7);
+      const nextSunday = new Date(nextMonday);
+      nextSunday.setDate(nextMonday.getDate() + 6);
+      const nextFriday = new Date(nextMonday);
+      nextFriday.setDate(nextMonday.getDate() + 4);
+      const nextWeekendEnd = new Date(nextFriday);
+      nextWeekendEnd.setDate(nextFriday.getDate() + 2);
+
+      let label = "";
+
+      if (filter === "today") {
+        start = new Date(now); start.setHours(0,0,0,0);
+        end = new Date(now); end.setHours(23,59,59,999);
+        label = "dzisiaj";
+      } else if (filter === "this_week") {
+        start = monday;
+        end = sunday;
+        label = "ten tydzień";
+      } else if (filter === "this_weekend") {
+        start = friday;
+        end = thisWeekendEnd;
+        label = "ten weekend";
+      } else if (filter === "next_week") {
+        start = nextMonday;
+        end = nextSunday;
+        label = "następny tydzień";
+      } else if (filter === "next_weekend") {
+        start = nextFriday;
+        end = nextWeekendEnd;
+        label = "następny weekend";
+      } else if (filter === "range") {
+        start = new Date(document.getElementById("date-from").value);
+        end = new Date(document.getElementById("date-to").value);
+        if (end < start) {
+          alert("Data końcowa nie może być wcześniejsza niż początkowa!");
+          return;
+        }
+        label = "zakres od " + start.toLocaleDateString() + " do " + end.toLocaleDateString();
+      } else {
+        label = "wszystkie";
+      }
+
+      filterInfo.textContent = "Wybrano: " + label;
+      displayEvents(start, end);
+    }
+;
 
       if (filter === "today") {
         start = new Date(now); start.setHours(0,0,0,0);
