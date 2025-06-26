@@ -16,28 +16,31 @@
       align-items: center;
       padding: 10px 15px;
       background-color: #f8f8f8;
+      flex-wrap: wrap;
     }
-    #filter-button {
+    #filter-button, #toggle-style {
       padding: 6px 12px;
       font-size: 14px;
+      margin-right: 10px;
       cursor: pointer;
     }
     #author {
       font-weight: bold;
       font-family: 'Arial Black', Arial, sans-serif;
-      text-align: right;
+      font-size: 14px;
     }
     #map {
       height: 85vh;
       width: 100%;
+      position: relative;
     }
     #legend {
       background: rgba(255,255,255,0.9);
       padding: 8px 12px;
-      font-size: 14px;
+      font-size: 13px;
       position: absolute;
       bottom: 10px;
-      right: 10px;
+      left: 10px;
       z-index: 999;
       display: flex;
       gap: 10px;
@@ -84,7 +87,10 @@
 </head>
 <body>
   <div id="header">
-    <button id="filter-button" onclick="showModal()">Filtruj</button>
+    <div>
+      <button id="filter-button" onclick="showModal()">Filtruj</button>
+      <button id="toggle-style" onclick="toggleMapStyle()">Tryb nocny</button>
+    </div>
     <div id="author">Opracowane przez: TDj "Hypno" Piotr Smoleń</div>
   </div>
 
@@ -135,9 +141,28 @@
     let map;
     let markers = [];
     let eventsData = [];
+    let isNightMode = false;
 
     const sheetId = "1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0";
     const sheetName = "Arkusz1";
+
+    const darkModeStyles = [
+      { elementType: "geometry", stylers: [{ color: "#212121" }] },
+      { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+      { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+      { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1d1d1d" }] },
+      { featureType: "road", elementType: "geometry", stylers: [{ color: "#383838" }] },
+      { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f2f2f" }] },
+      { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
+    ];
+
+    function toggleMapStyle() {
+      isNightMode = !isNightMode;
+      document.getElementById("toggle-style").innerText = isNightMode ? "Tryb dzienny" : "Tryb nocny";
+      map.setOptions({ styles: isNightMode ? darkModeStyles : null });
+    }
 
     function showModal() {
       document.getElementById("modal").style.display = "block";
@@ -213,23 +238,10 @@
         return end >= startDate && start <= endDate;
       });
 
-      const darkModeStyles = [
-        { elementType: "geometry", stylers: [{ color: "#212121" }] },
-        { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-        { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-        { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
-        { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1d1d1d" }] },
-        { featureType: "road", elementType: "geometry", stylers: [{ color: "#383838" }] },
-        { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f2f2f" }] },
-        { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
-      ];
-
       if (!map) {
         map = new google.maps.Map(document.getElementById("map"), {
           zoom: 6,
           center: { lat: 52.1, lng: 19.4 },
-          styles: darkModeStyles,
         });
       }
 
