@@ -36,12 +36,29 @@
       width: 16px;
       height: 16px;
     }
+
+    /* Styl dla obu przycisków */
+    #themeToggle,
+    #filterButton {
+      background-color: lightgray;              /* tło */
+      font-family: 'Arial Black', sans-serif;   /* czcionka */
+      font-weight: bold;                        /* pogrubienie */
+      border: none;                             /* usuń obramowanie */
+      cursor: pointer;                          /* pokazuje rękę przy najechaniu */
+    }
+    
+    /* Opcjonalnie: efekt podświetlenia przy hover */
+    #themeToggle:hover,
+    #filterButton:hover {
+      background-color: #d3d3d3;
+    }
+
   </style>
 </head>
 <body>
 <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
   <button id="themeToggle" style="padding: 6px 10px;">Tryb nocny</button>
-  <button onclick="openFilterModal()" style="padding: 6px 10px;">Filtruj</button>
+  <button id="filterButton" onclick="openFilterModal()" style="padding: 6px 10px;">Filtruj</button>
   <div id="selectedFilter" style="margin-left: 10px; font-weight: bold;"></div>
 </div>
 
