@@ -1,92 +1,43 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mapa Milong</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; }
     #header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 15px;
-      background-color: #f8f8f8;
-      flex-wrap: wrap;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 15px; background-color: #f8f8f8; flex-wrap: wrap;
     }
     #filter-button, #toggle-style {
-      padding: 6px 12px;
-      font-size: 14px;
-      margin-right: 10px;
-      cursor: pointer;
+      padding: 6px 12px; font-size: 14px; margin-right: 10px; cursor: pointer;
     }
     #author {
       font-family: 'Arial Black', Arial, sans-serif;
-      font-size: 13px;
-      font-weight: bold;
+      font-size: 13px; font-weight: bold;
     }
-    #map {
-      height: 85vh;
-      width: 100%;
-      position: relative;
-    }
+    #map { height: 85vh; width: 100%; position: relative; }
     #legend {
-      background: rgba(255,255,255,0.9);
-      padding: 8px 12px;
-      font-size: 13px;
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      z-index: 999;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      background: rgba(255,255,255,0.9); padding: 8px 12px; font-size: 13px;
+      position: absolute; bottom: 10px; left: 10px; z-index: 999;
+      display: flex; gap: 10px; align-items: center;
+      border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .legend-icon {
-      width: 20px;
-      height: 34px;
-    }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .legend-icon { width: 20px; height: 34px; }
     #modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+      width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
     }
     #modal-content {
-      background-color: #fff;
-      margin: 10% auto;
-      padding: 20px;
-      width: 300px;
+      background-color: #fff; margin: 10% auto; padding: 20px; width: 300px;
       border-radius: 8px;
     }
-    #modal-content h2 {
-      margin-top: 0;
-    }
-    #modal-content label {
-      display: block;
-      margin: 8px 0;
-    }
-    #modal-content input[type="date"] {
-      display: block;
-      width: 100%;
-    }
-    #filter-info {
-      font-size: 14px;
-      margin-left: 20px;
-    }
+    #modal-content h2 { margin-top: 0; }
+    #modal-content label { display: block; margin: 8px 0; }
+    #modal-content input[type="date"] { display: block; width: 100%; }
+    #filter-info { font-size: 14px; margin-left: 20px; }
   </style>
 </head>
 <body>
@@ -106,7 +57,7 @@
     <div class="legend-item"><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png" />jutro</div>
     <div class="legend-item"><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png" />pojutrze</div>
     <div class="legend-item"><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" />pozostałe</div>
-    <div class="legend-item"><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/black-dot.png" />minione</div>
+    <div class="legend-item"><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/black-dot.png" />minione</div>
   </div>
 
   <div id="modal">
@@ -128,7 +79,6 @@
   </div>
 
 <script>
-
 let map;
 let markers = [];
 let eventsData = [];
@@ -137,17 +87,7 @@ let isNightMode = false;
 const sheetId = "1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0";
 const sheetName = "Arkusz1";
 
-const darkModeStyles = [
-  { elementType: "geometry", stylers: [{ color: "#212121" }] },
-  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1d1d1d" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#383838" }] },
-  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f2f2f" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
-];
+const darkModeStyles = [{ elementType: "geometry", stylers: [{ color: "#212121" }] },{ elementType: "labels.icon", stylers: [{ visibility: "off" }] },{ elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },{ elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },{ featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },{ featureType: "poi", elementType: "geometry", stylers: [{ color: "#1d1d1d" }] },{ featureType: "road", elementType: "geometry", stylers: [{ color: "#383838" }] },{ featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f2f2f" }] },{ featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }];
 
 function toggleMapStyle() {
   isNightMode = !isNightMode;
@@ -155,18 +95,12 @@ function toggleMapStyle() {
   map.setOptions({ styles: isNightMode ? darkModeStyles : null });
 }
 
-function showModal() {
-  document.getElementById("modal").style.display = "block";
-}
-
-function hideModal() {
-  document.getElementById("modal").style.display = "none";
-}
+function showModal() { document.getElementById("modal").style.display = "block"; }
+function hideModal() { document.getElementById("modal").style.display = "none"; }
 
 document.querySelectorAll("input[name='filter']").forEach(input => {
   input.addEventListener("change", () => {
-    document.getElementById("range-inputs").style.display =
-      input.value === "range" ? "block" : "none";
+    document.getElementById("range-inputs").style.display = input.value === "range" ? "block" : "none";
   });
 });
 
@@ -203,43 +137,21 @@ function applyFilter() {
   nextWeekendEnd.setDate(nextFriday.getDate() + 2);
 
   let label = "";
-
-  if (filter === "today") {
-    start = new Date(now); start.setHours(0,0,0,0);
-    end = new Date(now); end.setHours(23,59,59,999);
-    label = "dzisiaj";
-  } else if (filter === "this_week") {
-    start = monday;
-    end = sunday;
-    label = "ten tydzień";
-  } else if (filter === "this_weekend") {
-    start = friday;
-    end = thisWeekendEnd;
-    label = "ten weekend";
-  } else if (filter === "next_week") {
-    start = nextMonday;
-    end = nextSunday;
-    label = "następny tydzień";
-  } else if (filter === "next_weekend") {
-    start = nextFriday;
-    end = nextWeekendEnd;
-    label = "następny weekend";
-  } else if (filter === "range") {
+  if (filter === "today") { start = new Date(now); start.setHours(0,0,0,0); end = new Date(now); end.setHours(23,59,59,999); label = "dzisiaj"; }
+  else if (filter === "this_week") { start = monday; end = sunday; label = "ten tydzień"; }
+  else if (filter === "this_weekend") { start = friday; end = thisWeekendEnd; label = "ten weekend"; }
+  else if (filter === "next_week") { start = nextMonday; end = nextSunday; label = "następny tydzień"; }
+  else if (filter === "next_weekend") { start = nextFriday; end = nextWeekendEnd; label = "następny weekend"; }
+  else if (filter === "range") {
     start = new Date(document.getElementById("date-from").value);
     end = new Date(document.getElementById("date-to").value);
-    if (end < start) {
-      alert("Data końcowa nie może być wcześniejsza niż początkowa!");
-      return;
-    }
+    if (end < start) { alert("Data końcowa nie może być wcześniejsza niż początkowa!"); return; }
     label = "zakres od " + start.toLocaleDateString() + " do " + end.toLocaleDateString();
-  } else {
-    label = "wszystkie";
-  }
+  } else label = "wszystkie";
 
   filterInfo.textContent = "Wybrano: " + label;
   displayEvents(start, end);
 }
-
 
 function displayEvents(startDate, endDate) {
   const now = new Date();
@@ -252,12 +164,7 @@ function displayEvents(startDate, endDate) {
     });
   }
 
-  if (!map) {
-    map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 6,
-      center: { lat: 52.1, lng: 19.4 },
-    });
-  }
+  if (!map) map = new google.maps.Map(document.getElementById("map"), { zoom: 6, center: { lat: 52.1, lng: 19.4 } });
 
   markers.forEach(marker => marker.setMap(null));
   markers = [];
@@ -277,104 +184,29 @@ function displayEvents(startDate, endDate) {
         else if (dayDiff > 2) color = "green";
 
         const marker = new google.maps.Marker({
-          map,
-          position,
-          icon: {
-            url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
-          },
-          title: `${event.Nazwa}
-${event["Data od"]} – ${event["Data do"]}`
-        });
-
-        markers.push(marker);
-
-        const infoContent = `
-          <div style="font-family:'Arial Black', sans-serif;">
-            <h3>${event.Nazwa}</h3>
-            <p><strong>Adres:</strong> ${event.Adres}</p>
-            <p><strong>Od:</strong> ${event["Data od"]}</p>
-            <p><strong>Do:</strong> ${event["Data do"]}</p>
-            <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
-            <p><strong>Organizator:</strong> ${event.Organizator}</p>
-            <p><strong>TDJ:</strong> ${event.TDJ}</p>
-            <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
-            <p><strong>Info:</strong> ${event.Informacje}</p>
-            <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
-            <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
-               <button>Wyznacz trasę do tego miejsca</button></a></p>
-          </div>
-        `;
-
-        const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        const tooltip = new google.maps.InfoWindow({
-          content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
-        });
-
-        marker.addListener("click", () => infowindow.open(map, marker));
-        marker.addListener("mouseover", () => tooltip.open(map, marker));
-        marker.addListener("mouseout", () => tooltip.close());
-      }
-    });
-  });
-}
-
-
-  if (!map) {
-    map = new google.maps.Map(document.getElementById("map"), {
-      zoom: 6,
-      center: { lat: 52.1, lng: 19.4 },
-    });
-  }
-
-  markers.forEach(marker => marker.setMap(null));
-  markers = [];
-
-  const geocoder = new google.maps.Geocoder();
-  filtered.reverse().forEach((event) => {
-    geocoder.geocode({ address: event.Adres }, (results, status) => {
-      if (status === "OK") {
-        const position = results[0].geometry.location;
-        const start = new Date(event["Data od"]);
-        const today = new Date(now); today.setHours(0,0,0,0);
-        const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
-        let color = "lightgray";
-        if (dayDiff === 0) color = "red";
-        else if (dayDiff === 1) color = "orange";
-        else if (dayDiff === 2) color = "yellow";
-        else if (dayDiff > 2) color = "green";
-
-        const marker = new google.maps.Marker({
-          map,
-          position,
-          icon: {
-            url: `https://maps.google.com/mapfiles/ms/icons/${color === 'lightgray' ? 'black' : color}-dot.png`,
-          },
+          map, position,
+          icon: { url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png` },
           title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
         });
 
         markers.push(marker);
 
-        const infoContent = `
-          <div style="font-family:'Arial Black', sans-serif;">
-            <h3>${event.Nazwa}</h3>
-            <p><strong>Adres:</strong> ${event.Adres}</p>
-            <p><strong>Od:</strong> ${event["Data od"]}</p>
-            <p><strong>Do:</strong> ${event["Data do"]}</p>
-            <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
-            <p><strong>Organizator:</strong> ${event.Organizator}</p>
-            <p><strong>TDJ:</strong> ${event.TDJ}</p>
-            <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
-            <p><strong>Info:</strong> ${event.Informacje}</p>
-            <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
-            <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
-               <button>Wyznacz trasę do tego miejsca</button></a></p>
-          </div>
-        `;
+        const infoContent = `<div style="font-family:'Arial Black', sans-serif;">
+          <h3>${event.Nazwa}</h3>
+          <p><strong>Adres:</strong> ${event.Adres}</p>
+          <p><strong>Od:</strong> ${event["Data od"]}</p>
+          <p><strong>Do:</strong> ${event["Data do"]}</p>
+          <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
+          <p><strong>Organizator:</strong> ${event.Organizator}</p>
+          <p><strong>TDJ:</strong> ${event.TDJ}</p>
+          <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
+          <p><strong>Info:</strong> ${event.Informacje}</p>
+          <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
+          <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank"><button>Wyznacz trasę do tego miejsca</button></a></p>
+        </div>`;
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        const tooltip = new google.maps.InfoWindow({
-          content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
-        });
+        const tooltip = new google.maps.InfoWindow({ content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}` });
 
         marker.addListener("click", () => infowindow.open(map, marker));
         marker.addListener("mouseover", () => tooltip.open(map, marker));
@@ -383,14 +215,8 @@ ${event["Data od"]} – ${event["Data do"]}`
     });
   });
 }
-
 window.initMap = loadData;
-
-
-// Ten blok zostanie uzupełniony w następnym kroku (osobno, by uniknąć limitu długości)
 </script>
-<script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap">
-</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
 </html>
