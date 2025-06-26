@@ -177,7 +177,7 @@ function displayEvents(startDate, endDate) {
         const start = new Date(event["Data od"]);
         const today = new Date(now); today.setHours(0,0,0,0);
         const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
-        let color = "black";
+        let color = "blue";
         if (dayDiff === 0) color = "red";
         else if (dayDiff === 1) color = "orange";
         else if (dayDiff === 2) color = "yellow";
