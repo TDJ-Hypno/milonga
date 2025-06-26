@@ -6,21 +6,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mapa Milong</title>
   <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
+      flex-wrap: wrap;
+    }
+    #filter-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: Arial, sans-serif;
+    }
+    #author {
+      font-weight: bold;
+      font-family: 'Berlin Sans FB', Arial, sans-serif;
+      text-align: right;
+      margin-top: 5px;
+    }
     #map {
       height: 90vh;
       width: 100%;
     }
-    #filter-container {
-      padding: 10px;
-    }
   </style>
 </head>
 <body>
-  <div id="filter-container">
-    <label for="days">Pokaż milongi z najbliższych </label>
-    <input type="number" id="days" value="7" min="1" max="365" />
-    <label> dni</label>
-    <button onclick="loadMap()">Pokaż</button>
+  <div id="header">
+    <div id="filter-container">
+      <label for="days">Pokaż wydarzenia z najbliższych </label>
+      <input type="number" id="days" value="7" min="1" max="365" />
+      <label> dni</label>
+      <button onclick="loadMap()">Filtruj</button>
+    </div>
+    <div id="author">
+      Opracowane przez: TDj "Hypno" Piotr Smoleń
+    </div>
   </div>
   <div id="map"></div>
 
@@ -45,7 +72,7 @@
           const endDate = new Date(row["Data do"]);
           return endDate >= now && endDate <= maxDate;
         })
-        .sort((a, b) => new Date(a["Data od"]) - new Date(b["Data od"])); // sortuj rosnąco wg daty
+        .sort((a, b) => new Date(a["Data od"]) - new Date(b["Data od"]));
 
       if (!map) {
         map = new google.maps.Map(document.getElementById("map"), {
@@ -54,13 +81,11 @@
         });
       }
 
-      // Usuń stare znaczniki
       markers.forEach(marker => marker.setMap(null));
       markers = [];
 
       const geocoder = new google.maps.Geocoder();
 
-      // Odwróć kolejność dodawania (najbliższe na końcu – będą na wierzchu)
       filtered.reverse().forEach((event) => {
         geocoder.geocode({ address: event.Adres }, (results, status) => {
           if (status === "OK") {
@@ -95,7 +120,7 @@
                 <p><strong>Do:</strong> ${event["Data do"]}</p>
                 <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
                 <p><strong>Organizator:</strong> ${event.Organizator}</p>
-                <p><strong>TDj:</strong> ${event.TDJ}</p>
+                <p><strong>TDJ:</strong> ${event.TDJ}</p>
                 <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
                 <p><strong>Info:</strong> ${event.Informacje}</p>
                 <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
