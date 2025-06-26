@@ -264,7 +264,15 @@ function displayEvents(startDate, endDate) {
           icon: {
             url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
           },
-          title: `${event.Nazwa} — ${new Date(event["Data od"]).toLocaleDateString()} ${new Date(event["Data od"]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+          //title: `${event.Nazwa} — ${new Date(event["Data od"]).toLocaleDateString()} ${new Date(event["Data od"]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+          title: `
+          <div style="font-family:'Arial Black',sans-serif;font-weight:bold;margin:0;padding:2px 6px;background:lightgray;">
+              ${event.Nazwa}
+            </div>
+            <div style="font-family:Arial,sans-serif;margin:0;padding:0 6px 4px;background:lightgray;">
+              ${from} – ${to}
+            </div>
+          `
         });
 
         markers.push(marker);
