@@ -191,20 +191,29 @@ function displayEvents(startDate, endDate) {
 
         markers.push(marker);
 
-        const infoContent = `<div style="font-family:'Arial Black', sans-serif;">
-          <h3>${event.Nazwa}</h3>
-          <p><strong>Adres:</strong> ${event.Adres}</p>
-          <p><strong>Od:</strong> ${event["Data od"]}</p>
-          <p><strong>Do:</strong> ${event["Data do"]}</p>
-          <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
-          <p><strong>Organizator:</strong> ${event.Organizator}</p>
-          <p><strong>TDJ:</strong> ${event.TDJ}</p>
-          <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
-          <p><strong>Info:</strong> ${event.Informacje}</p>
-          <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
-          <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank"><button>Wyznacz trasę do tego miejsca</button></a></p>
-          <p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=Nazwa&dates=...&details=...&location=..." target="_blank"><button>Dodaj do mojego kalendarza</button></a></p>
-        </div>`;
+        
+
+const infoContent = `
+  <div style="font-family:'Arial Black', sans-serif;">
+    <h3>${event.Nazwa}</h3>
+    <p><strong>Adres:</strong> ${event.Adres}</p>
+    <p><strong>Od:</strong> ${event["Data od"]}</p>
+    <p><strong>Do:</strong> ${event["Data do"]}</p>
+    <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
+    <p><strong>Organizator:</strong> ${event.Organizator}</p>
+    <p><strong>TDJ:</strong> ${event.TDJ}</p>
+    <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
+    <p><strong>Info:</strong> ${event.Informacje}</p>
+    <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
+    <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
+       <button>Wyznacz trasę do tego miejsca</button></a></p>
+    ${new Date(event["Data od"]) > new Date() ? `<p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "
+" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
+       <button>Dodaj do mojego kalendarza</button></a></p>` : ""}
+  </div>
+`;
+
+
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
         const tooltip = new google.maps.InfoWindow({ content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}` });
@@ -216,6 +225,14 @@ function displayEvents(startDate, endDate) {
     });
   });
 }
+
+
+
+function formatDateForCalendar(dateStr) {
+  const dt = new Date(dateStr);
+  return dt.toISOString().replace(/-|:|\.\d\d\d/g,"");
+}
+
 window.initMap = loadData;
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
