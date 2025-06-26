@@ -5,15 +5,9 @@
   <title>Mapa milong</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
-    #map {
-      height: 100%;
-      width: 100%;
-    }
+    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+    #map { height: 100%; width: 100%; }
+
     .info-panel {
       position: absolute;
       top: 10px;
@@ -25,6 +19,7 @@
       font-size: 12px;
       z-index: 5;
     }
+
     .legend {
       position: absolute;
       bottom: 10px;
@@ -38,21 +33,40 @@
       gap: 15px;
       align-items: center;
     }
+
     .legend-icon {
       width: 16px;
       height: 16px;
     }
-    #filterModal, select, input[type="date"] {
+
+    #filterModal {
+      display: none;
+      position: fixed;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
       background: lightgray;
-      font-family: Arial, sans-serif;
+      padding: 20px;
+      border: 1px solid #ccc;
+      z-index: 1000;
+      border-radius: 8px;
     }
+
+    #filterModal input,
+    #filterModal select {
+      background-color: lightgray;
+    }
+
     .gm-style-iw-t {
-      display: none !important;
+      display: none !important; /* ukrycie górnej ramki tooltipa */
     }
-    .gm-style .gm-style-iw-c {
-      background: lightgray;
+
+    .gm-style-iw {
+      background-color: lightgray !important;
       font-family: 'Arial Black', sans-serif;
+      font-size: 10px;
     }
+
   </style>
 </head>
 <body>
@@ -62,8 +76,7 @@
   <div id="selectedFilter" style="margin-left: 10px; font-weight: bold;"></div>
 </div>
 
-<div id="filterModal" style="display:none; position:fixed;top:50px;left:50%;transform:translateX(-50%);
-     background:lightgray;padding:20px;border:1px solid #ccc;z-index:1000;border-radius:8px;">
+<div id="filterModal">
   <h3>Pokaż wydarzenia</h3>
   <select id="filterSelect" onchange="toggleDateInputs()">
     <option value="all">wszystkie</option>
@@ -142,17 +155,6 @@ function formatDateForCalendar(dateStr) {
   return dt.toISOString().replace(/-|:|\.\d\d\d/g,"");
 }
 
-function formatTooltip(startStr, endStr) {
-  const start = new Date(startStr);
-  const end = new Date(endStr);
-  const sDate = start.toLocaleDateString();
-  const sTime = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const eTime = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  return (sDate === end.toLocaleDateString())
-    ? `${sDate} ${sTime}–${eTime}`
-    : `${startStr} – ${endStr}`;
-}
-
 function displayEvents(startDate, endDate) {
   const now = new Date();
   markers.forEach(marker => marker.setMap(null));
@@ -162,14 +164,15 @@ function displayEvents(startDate, endDate) {
   eventsData.slice().reverse().forEach((event) => {
     const start = new Date(event["Data od"]);
     const end = new Date(event["Data do"]);
+
     if (start > endDate || end < startDate) return;
 
     geocoder.geocode({ address: event.Adres }, (results, status) => {
       if (status === "OK") {
         const position = results[0].geometry.location;
-        const today = new Date(now); today.setHours(0,0,0,0);
+        const today = new Date(); today.setHours(0,0,0,0);
         const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
-        let color = "blue";
+        let color = "blue"; // minione
         if (dayDiff === 0) color = "red";
         else if (dayDiff === 1) color = "orange";
         else if (dayDiff === 2) color = "yellow";
@@ -181,13 +184,13 @@ function displayEvents(startDate, endDate) {
           icon: {
             url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
           },
-          title: `${event.Nazwa}`
+          title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
         });
 
         markers.push(marker);
 
         const infoContent = `
-          <div style="font-family:'Arial Black', sans-serif;">
+          <div style="font-family:'Arial Black', sans-serif; background:lightgray; padding:10px; border-radius:8px;">
             <h3>${event.Nazwa}</h3>
             <p><strong>Adres:</strong> ${event.Adres}</p>
             <p><strong>Od:</strong> ${event["Data od"]}</p>
@@ -199,16 +202,23 @@ function displayEvents(startDate, endDate) {
             <p><strong>Info:</strong> ${event.Informacje}</p>
             <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
             <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
-               <button>Wyznacz trasę do tego miejsca</button></a></p>
-            ${start > new Date() ? `<p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "
-" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
-               <button>Dodaj do mojego kalendarza</button></a></p>` : ""}
-          </div>
-        `;
+              <button>Wyznacz trasę do tego miejsca</button></a></p>
+            ${start > new Date() ? `
+              <p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "\n" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
+              <button>Dodaj do mojego kalendarza</button></a></p>` : ""}
+          </div>`;
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
+
+        const sameDay = event["Data od"].slice(0, 10) === event["Data do"].slice(0, 10);
+        const timeStart = new Date(event["Data od"]).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+        const timeEnd = new Date(event["Data do"]).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+        const tooltipText = sameDay
+          ? `${event["Data od"].slice(0, 10)} ${timeStart}–${timeEnd}`
+          : `${event["Data od"]} – ${event["Data do"]}`;
+
         const tooltip = new google.maps.InfoWindow({
-          content: formatTooltip(event["Data od"], event["Data do"]),
+          content: `<div style="font-family:'Arial Black'; background:lightgray; font-size:11px;">${event.Nazwa}<br>${tooltipText}</div>`,
         });
 
         marker.addListener("click", () => infowindow.open(map, marker));
@@ -290,6 +300,9 @@ function applyFilter() {
 }
 
 window.initMap = loadData;
+
+
+
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
