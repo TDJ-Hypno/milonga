@@ -114,7 +114,7 @@
       pozostałe
     </div>
     <div class="legend-item">
-      <img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/grey-dot.png" />
+      <img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/lightgray-dot.png" />
       minione
     </div>
   </div>
@@ -266,7 +266,7 @@
               map,
               position,
               icon: {
-                url: `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
+                url: `https://maps.google.com/mapfiles/ms/icons/${color === 'grey' ? 'lightgray' : color}-dot.png`,
               },
               title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
             });
