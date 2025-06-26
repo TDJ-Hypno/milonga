@@ -278,55 +278,14 @@ function displayEvents(startDate, endDate) {
           </div>
         `;
 
-        //const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        //const tooltip = new google.maps.InfoWindow({
-        //  content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
-        //});
-
-        //marker.addListener("click", () => infowindow.open(map, marker));
-        //// marker.addListener("mouseover", () => tooltip.open(map, marker));
-        //// marker.addListener("mouseout", () => tooltip.close());
-
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        
-        // obliczamy, czy wydarzenie jest jednego dnia
-        const sameDay = event["Data od"].slice(0,10) === event["Data do"].slice(0,10);
-        const startDate = event["Data od"].slice(0,10);
-        const startTime = event["Data od"].slice(11,16);
-        const endTime   = event["Data do"].slice(11,16);
-        // druga linia tooltipu – jeśli ten sam dzień, to godziny, inaczej pełne daty
-        const dateLine = sameDay
-          ? `${startDate} ${startTime}–${endTime}`
-          : `${event["Data od"]} – ${event["Data do"]}`;
-        
         const tooltip = new google.maps.InfoWindow({
-          content: `
-            <div style="
-              background: lightgray;
-              font-family: 'Arial Black', sans-serif;
-              font-weight: bold;
-              margin: 0;
-              padding: 4px 6px;
-            ">
-              ${event.Nazwa}
-            </div>
-            <div style="
-              background: lightgray;
-              font-family: Arial, sans-serif;
-              margin: 0;
-              padding: 2px 6px 4px 6px;
-            ">
-              ${dateLine}
-            </div>
-          `
+          content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
         });
-        
-        // przywracamy tooltip na hover
-        marker.addListener("mouseover", () => tooltip.open(map, marker));
-        marker.addListener("mouseout",  () => tooltip.close());
-        
-        // zachowujemy InfoWindow na click
-        marker.addListener("click",    () => infowindow.open(map, marker));
+
+        marker.addListener("click", () => infowindow.open(map, marker));
+        // marker.addListener("mouseover", () => tooltip.open(map, marker));
+        // marker.addListener("mouseout", () => tooltip.close());
 
       }
     });
