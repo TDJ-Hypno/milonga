@@ -15,64 +15,186 @@
       justify-content: space-between;
       align-items: center;
       padding: 10px 15px;
-      font-family: Arial, sans-serif;
       background-color: #f8f8f8;
-      flex-wrap: wrap;
     }
-    #filter-container {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-family: Arial, sans-serif;
+    #filter-button {
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
     }
     #author {
       font-weight: bold;
-      font-family: 'Arial Black', Arial, sans-serif;
+      font-family: 'Berlin Sans FB', Arial, sans-serif;
       text-align: right;
-      margin-top: 5px;
     }
     #map {
-      height: 90vh;
+      height: 85vh;
+      width: 100%;
+    }
+    #legend {
+      background: #fff;
+      padding: 10px;
+      font-size: 14px;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 999;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      border-radius: 50%;
+    }
+    #modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    #modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 300px;
+      border-radius: 8px;
+    }
+    #modal-content h2 {
+      margin-top: 0;
+    }
+    #modal-content label {
+      display: block;
+      margin: 8px 0;
+    }
+    #modal-content input[type="date"] {
+      display: block;
       width: 100%;
     }
   </style>
 </head>
 <body>
   <div id="header">
-    <div id="filter-container">
-      <label for="days">Pokaż milongi z najbliższych </label>
-      <input type="number" id="days" value="7" min="1" max="365" />
-      <label> dni</label>
-      <button onclick="loadMap()">Pokaż</button>
-    </div>
-    <div id="author">
-      Opracowane przez: TDj "Hypno" Piotr Smoleń
+    <button id="filter-button" onclick="showModal()">Filtruj</button>
+    <div id="author">Opracowane przez: TDj "Hypno" Piotr Smoleń</div>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="legend">
+    <div class="legend-item"><div class="legend-color" style="background:red;"></div> dzisiaj</div>
+    <div class="legend-item"><div class="legend-color" style="background:orange;"></div> jutro</div>
+    <div class="legend-item"><div class="legend-color" style="background:gold;"></div> pojutrze</div>
+    <div class="legend-item"><div class="legend-color" style="background:green;"></div> pozostałe</div>
+    <div class="legend-item"><div class="legend-color" style="background:gray;"></div> minione</div>
+  </div>
+
+  <div id="modal">
+    <div id="modal-content">
+      <h2>Pokaż wydarzenia</h2>
+      <label><input type="radio" name="filter" value="all" checked> wszystkie</label>
+      <label><input type="radio" name="filter" value="today"> dzisiaj</label>
+      <label><input type="radio" name="filter" value="this_week"> ten tydzień</label>
+      <label><input type="radio" name="filter" value="this_weekend"> ten weekend</label>
+      <label><input type="radio" name="filter" value="next_week"> następny tydzień</label>
+      <label><input type="radio" name="filter" value="next_weekend"> następny weekend</label>
+      <label><input type="radio" name="filter" value="range"> w zakresie</label>
+      <div id="range-inputs" style="display:none;">
+        <label>od: <input type="date" id="date-from" /></label>
+        <label>do: <input type="date" id="date-to" /></label>
+      </div>
+      <button onclick="applyFilter()">Filtruj</button>
     </div>
   </div>
-  <div id="map"></div>
 
   <script>
     let map;
     let markers = [];
+    let eventsData = [];
 
     const sheetId = "1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0";
     const sheetName = "Arkusz1";
 
-    async function loadMap() {
+    function showModal() {
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function hideModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    document.querySelectorAll("input[name='filter']").forEach(input => {
+      input.addEventListener("change", () => {
+        document.getElementById("range-inputs").style.display =
+          input.value === "range" ? "block" : "none";
+      });
+    });
+
+    async function loadData() {
       const response = await fetch(`https://opensheet.elk.sh/${sheetId}/${sheetName}`);
-      const data = await response.json();
+      eventsData = await response.json();
+      applyFilter();
+    }
+
+    function applyFilter() {
+      hideModal();
 
       const now = new Date();
-      const days = parseInt(document.getElementById("days").value);
-      const maxDate = new Date(now);
-      maxDate.setDate(now.getDate() + days);
+      let start = new Date(2000, 0, 1);
+      let end = new Date(3000, 0, 1);
+      const filter = document.querySelector("input[name='filter']:checked").value;
 
-      const filtered = data
-        .filter(row => {
-          const endDate = new Date(row["Data do"]);
-          return endDate >= now && endDate <= maxDate;
-        })
-        .sort((a, b) => new Date(a["Data od"]) - new Date(b["Data od"]));
+      const getNextWeekend = () => {
+        const nextSat = new Date(now);
+        nextSat.setDate(now.getDate() + (6 - now.getDay() + 7) % 7);
+        const sun = new Date(nextSat);
+        sun.setDate(nextSat.getDate() + 1);
+        return [nextSat, sun];
+      };
+
+      if (filter === "today") {
+        start = new Date(now); start.setHours(0,0,0,0);
+        end = new Date(now); end.setHours(23,59,59,999);
+      } else if (filter === "this_week") {
+        const first = new Date(now); first.setDate(now.getDate() - now.getDay());
+        const last = new Date(first); last.setDate(first.getDate() + 6);
+        start = first; end = last;
+      } else if (filter === "this_weekend") {
+        const sat = new Date(now);
+        sat.setDate(now.getDate() + (6 - now.getDay()) % 7);
+        const sun = new Date(sat);
+        sun.setDate(sat.getDate() + 1);
+        start = sat; end = sun;
+      } else if (filter === "next_week") {
+        const first = new Date(now);
+        first.setDate(now.getDate() - now.getDay() + 7);
+        const last = new Date(first);
+        last.setDate(first.getDate() + 6);
+        start = first; end = last;
+      } else if (filter === "next_weekend") {
+        [start, end] = getNextWeekend();
+      } else if (filter === "range") {
+        start = new Date(document.getElementById("date-from").value);
+        end = new Date(document.getElementById("date-to").value);
+      }
+
+      displayEvents(start, end);
+    }
+
+    function displayEvents(startDate, endDate) {
+      const now = new Date();
+      const filtered = eventsData.filter(row => {
+        const start = new Date(row["Data od"]);
+        const end = new Date(row["Data do"]);
+        return end >= startDate && start <= endDate;
+      });
 
       if (!map) {
         map = new google.maps.Map(document.getElementById("map"), {
@@ -85,21 +207,18 @@
       markers = [];
 
       const geocoder = new google.maps.Geocoder();
-
       filtered.reverse().forEach((event) => {
         geocoder.geocode({ address: event.Adres }, (results, status) => {
           if (status === "OK") {
             const position = results[0].geometry.location;
-            const startDate = new Date(event["Data od"]);
-            const startDateMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-            const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const dayDiff = Math.floor((startDateMidnight - nowMidnight) / (1000 * 60 * 60 * 24));
-
-            let color;
+            const start = new Date(event["Data od"]);
+            const today = new Date(now); today.setHours(0,0,0,0);
+            const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
+            let color = "gray";
             if (dayDiff === 0) color = "red";
             else if (dayDiff === 1) color = "orange";
-            else if (dayDiff === 2) color = "yellow";
-            else color = "green";
+            else if (dayDiff === 2) color = "gold";
+            else if (dayDiff > 2) color = "green";
 
             const marker = new google.maps.Marker({
               map,
@@ -113,14 +232,14 @@
             markers.push(marker);
 
             const infoContent = `
-              <div>
+              <div style="font-family:'Arial Black', sans-serif;">
                 <h3>${event.Nazwa}</h3>
                 <p><strong>Adres:</strong> ${event.Adres}</p>
                 <p><strong>Od:</strong> ${event["Data od"]}</p>
                 <p><strong>Do:</strong> ${event["Data do"]}</p>
                 <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
                 <p><strong>Organizator:</strong> ${event.Organizator}</p>
-                <p><strong>TDj:</strong> ${event.TDJ}</p>
+                <p><strong>TDJ:</strong> ${event.TDJ}</p>
                 <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
                 <p><strong>Info:</strong> ${event.Informacje}</p>
                 <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
@@ -129,31 +248,20 @@
               </div>
             `;
 
-            const infowindow = new google.maps.InfoWindow({
-              content: infoContent,
-            });
-
+            const infowindow = new google.maps.InfoWindow({ content: infoContent });
             const tooltip = new google.maps.InfoWindow({
               content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
             });
 
-            marker.addListener("click", () => {
-              infowindow.open(map, marker);
-            });
-
-            marker.addListener("mouseover", () => {
-              tooltip.open(map, marker);
-            });
-
-            marker.addListener("mouseout", () => {
-              tooltip.close();
-            });
+            marker.addListener("click", () => infowindow.open(map, marker));
+            marker.addListener("mouseover", () => tooltip.open(map, marker));
+            marker.addListener("mouseout", () => tooltip.close());
           }
         });
       });
     }
 
-    window.initMap = loadMap;
+    window.initMap = loadData;
   </script>
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap">
