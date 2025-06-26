@@ -284,8 +284,8 @@ function displayEvents(startDate, endDate) {
         });
 
         marker.addListener("click", () => infowindow.open(map, marker));
-        marker.addListener("mouseover", () => tooltip.open(map, marker));
-         marker.addListener("mouseout", () => tooltip.close());
+        // marker.addListener("mouseover", () => tooltip.open(map, marker));
+        // marker.addListener("mouseout", () => tooltip.close());
       }
     });
   });
