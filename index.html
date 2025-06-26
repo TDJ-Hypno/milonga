@@ -43,7 +43,9 @@
       background-color: lightgray;              /* tło */
       font-family: 'Arial Black', sans-serif;   /* czcionka */
       font-weight: bold;                        /* pogrubienie */
-      border: none;                             /* usuń obramowanie */
+      border: 2px solid #333;     /* grubsza, ciemna linia */
+      border-radius: 6px;         /* zaokrąglone rogi */
+      padding: 6px 12px;          /* możesz nieznacznie zwiększyć padding */
       cursor: pointer;                          /* pokazuje rękę przy najechaniu */
     }
     
@@ -51,6 +53,7 @@
     #themeToggle:hover,
     #filterButton:hover {
       background-color: #d3d3d3;
+      border-color: #000;         /* na hover można przyciemnić obramowanie */
     }
 
   </style>
