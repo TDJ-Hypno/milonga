@@ -254,7 +254,7 @@ function displayEvents(startDate, endDate) {
           icon: {
             url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
           },
-          title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
+          title: `${event.Nazwa} — ${new Date(event["Data od"]).toLocaleDateString()} ${new Date(event["Data od"]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
         });
 
         markers.push(marker);
