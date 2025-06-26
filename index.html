@@ -240,16 +240,84 @@ function applyFilter() {
   displayEvents(start, end);
 }
 
+
 function displayEvents(startDate, endDate) {
   const now = new Date();
   let filtered = eventsData;
-if (!(startDate.getFullYear() === 2000 && endDate.getFullYear() === 3000)) {
-  filtered = eventsData.filter(row => {
-    const start = new Date(row["Data od"]);
-    const end = new Date(row["Data do"]);
-    return end >= startDate && start <= endDate;
+  if (!(startDate.getFullYear() === 2000 && endDate.getFullYear() === 3000)) {
+    filtered = eventsData.filter(row => {
+      const start = new Date(row["Data od"]);
+      const end = new Date(row["Data do"]);
+      return end >= startDate && start <= endDate;
+    });
+  }
+
+  if (!map) {
+    map = new google.maps.Map(document.getElementById("map"), {
+      zoom: 6,
+      center: { lat: 52.1, lng: 19.4 },
+    });
+  }
+
+  markers.forEach(marker => marker.setMap(null));
+  markers = [];
+
+  const geocoder = new google.maps.Geocoder();
+  filtered.reverse().forEach((event) => {
+    geocoder.geocode({ address: event.Adres }, (results, status) => {
+      if (status === "OK") {
+        const position = results[0].geometry.location;
+        const start = new Date(event["Data od"]);
+        const today = new Date(now); today.setHours(0,0,0,0);
+        const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
+        let color = "black";
+        if (dayDiff === 0) color = "red";
+        else if (dayDiff === 1) color = "orange";
+        else if (dayDiff === 2) color = "yellow";
+        else if (dayDiff > 2) color = "green";
+
+        const marker = new google.maps.Marker({
+          map,
+          position,
+          icon: {
+            url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
+          },
+          title: `${event.Nazwa}
+${event["Data od"]} – ${event["Data do"]}`
+        });
+
+        markers.push(marker);
+
+        const infoContent = `
+          <div style="font-family:'Arial Black', sans-serif;">
+            <h3>${event.Nazwa}</h3>
+            <p><strong>Adres:</strong> ${event.Adres}</p>
+            <p><strong>Od:</strong> ${event["Data od"]}</p>
+            <p><strong>Do:</strong> ${event["Data do"]}</p>
+            <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
+            <p><strong>Organizator:</strong> ${event.Organizator}</p>
+            <p><strong>TDJ:</strong> ${event.TDJ}</p>
+            <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
+            <p><strong>Info:</strong> ${event.Informacje}</p>
+            <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
+            <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
+               <button>Wyznacz trasę do tego miejsca</button></a></p>
+          </div>
+        `;
+
+        const infowindow = new google.maps.InfoWindow({ content: infoContent });
+        const tooltip = new google.maps.InfoWindow({
+          content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
+        });
+
+        marker.addListener("click", () => infowindow.open(map, marker));
+        marker.addListener("mouseover", () => tooltip.open(map, marker));
+        marker.addListener("mouseout", () => tooltip.close());
+      }
+    });
   });
 }
+
 
   if (!map) {
     map = new google.maps.Map(document.getElementById("map"), {
@@ -279,7 +347,7 @@ if (!(startDate.getFullYear() === 2000 && endDate.getFullYear() === 3000)) {
           map,
           position,
           icon: {
-            url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
+            url: `https://maps.google.com/mapfiles/ms/icons/${color === 'lightgray' ? 'black' : color}-dot.png`,
           },
           title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
         });
