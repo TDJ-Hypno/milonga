@@ -24,7 +24,7 @@
     }
     #author {
       font-weight: bold;
-      font-family: 'Arial Black', Arial, sans-serif;
+      font-family: 'Berlin Sans FB', Arial, sans-serif;
       text-align: right;
     }
     #map {
@@ -32,25 +32,27 @@
       width: 100%;
     }
     #legend {
-      background: #fff;
-      padding: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 8px 12px;
       font-size: 14px;
       position: absolute;
       bottom: 10px;
-      left: 10px;
+      right: 10px;
       z-index: 999;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     .legend-item {
       display: flex;
       align-items: center;
-      margin-bottom: 4px;
+      gap: 4px;
     }
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      margin-right: 8px;
-      border-radius: 50%;
+    .legend-icon {
+      width: 20px;
+      height: 34px;
     }
     #modal {
       display: none;
@@ -89,11 +91,26 @@
   <div id="map"></div>
 
   <div id="legend">
-    <div class="legend-item"><div class="legend-color" style="background:red;"></div> dzisiaj</div>
-    <div class="legend-item"><div class="legend-color" style="background:orange;"></div> jutro</div>
-    <div class="legend-item"><div class="legend-color" style="background:gold;"></div> pojutrze</div>
-    <div class="legend-item"><div class="legend-color" style="background:green;"></div> pozostałe</div>
-    <div class="legend-item"><div class="legend-color" style="background:gray;"></div> minione</div>
+    <div class="legend-item">
+      <img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png" />
+      dzisiaj
+    </div>
+    <div class="legend-item">
+      <img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png" />
+      jutro
+    </div>
+    <div class="legend-item">
+      <img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png" />
+      pojutrze
+    </div>
+    <div class="legend-item">
+      <img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" />
+      pozostałe
+    </div>
+    <div class="legend-item">
+      <img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/grey-dot.png" />
+      minione
+    </div>
   </div>
 
   <div id="modal">
@@ -196,10 +213,23 @@
         return end >= startDate && start <= endDate;
       });
 
+      const darkModeStyles = [
+        { elementType: "geometry", stylers: [{ color: "#212121" }] },
+        { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+        { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+        { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1d1d1d" }] },
+        { featureType: "road", elementType: "geometry", stylers: [{ color: "#383838" }] },
+        { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f2f2f" }] },
+        { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
+      ];
+
       if (!map) {
         map = new google.maps.Map(document.getElementById("map"), {
           zoom: 6,
           center: { lat: 52.1, lng: 19.4 },
+          styles: darkModeStyles,
         });
       }
 
@@ -214,19 +244,19 @@
             const start = new Date(event["Data od"]);
             const today = new Date(now); today.setHours(0,0,0,0);
             const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
-            let color = "gray";
+            let color = "grey";
             if (dayDiff === 0) color = "red";
             else if (dayDiff === 1) color = "orange";
-            else if (dayDiff === 2) color = "gold";
+            else if (dayDiff === 2) color = "yellow";
             else if (dayDiff > 2) color = "green";
 
             const marker = new google.maps.Marker({
               map,
               position,
-              title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`,
               icon: {
                 url: `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
-              }
+              },
+              title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
             });
 
             markers.push(marker);
