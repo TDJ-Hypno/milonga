@@ -85,7 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("themeToggle").textContent = nightMode ? "Tryb dzienny" : "Tryb nocny";
     if (map) {
       map.setOptions({
-        styles: nightMode ? [{ elementType: 'geometry', stylers: [{ color: '#242f3e' }] }] : null
+        // styles: nightMode ? [{ elementType: 'geometry', stylers: [{ color: '#242f3e' }] }] : null
+        styles: nightMode ? [{ elementType: 'geometry' }] : null
       });
     }
   });
