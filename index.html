@@ -203,6 +203,7 @@ function displayEvents(startDate, endDate) {
           <p><strong>Info:</strong> ${event.Informacje}</p>
           <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
           <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank"><button>Wyznacz trasę do tego miejsca</button></a></p>
+          <p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=Nazwa&dates=...&details=...&location=..." target="_blank"><button>Dodaj do mojego kalendarza</button></a></p>
         </div>`;
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
