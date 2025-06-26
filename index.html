@@ -26,6 +26,8 @@
       padding: 10px;
       border-radius: 8px;
       font-size: 12px;
+      font-family: 'Arial Black', sans-serif;
+      font-weight: bold;
       display: flex;
       gap: 15px;
       align-items: center;
@@ -48,13 +50,13 @@
      background:white;padding:20px;border:1px solid #ccc;z-index:1000;border-radius:8px;">
   <h3>Pokaż wydarzenia</h3>
   <select id="filterSelect" onchange="toggleDateInputs()">
-    <option value="all">wszystkie</option>
-    <option value="today">dzisiaj</option>
-    <option value="week">ten tydzień</option>
-    <option value="weekend">ten weekend</option>
-    <option value="nextweek">następny tydzień</option>
-    <option value="nextweekend">następny weekend</option>
-    <option value="range">w zakresie</option>
+    <option value="all">Wszystkie</option>
+    <option value="today">Dzisiaj</option>
+    <option value="week">Ten tydzień</option>
+    <option value="weekend">Ten weekend</option>
+    <option value="nextweek">Następny tydzień</option>
+    <option value="nextweekend">Następny weekend</option>
+    <option value="range">W zakresie</option>
   </select><br><br>
   <div id="dateInputs" style="display:none;">
     <label>Od: <input type="date" id="dateFrom"></label><br><br>
@@ -66,11 +68,11 @@
 <div id="map"></div>
 <div class="info-panel">Opracowane przez: TDj "Hypno" Piotr Smoleń</div>
 <div class="legend">
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png"> dzisiaj</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png"> jutro</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> pojutrze</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> pozostałe</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> minione</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> Przyszłe</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Minione</div>
 </div>
 
 <script>
