@@ -183,6 +183,16 @@ let markers = [];
 let eventsData = [];
 let nightMode = false;
 
+function formatDD(iso) {
+const d = new Date(iso);
+const Y = d.getFullYear();
+const M = String(d.getMonth()+1).padStart(2,'0');
+const D = String(d.getDate()).padStart(2,'0');
+const h = String(d.getHours()).padStart(2,'0');
+const m = String(d.getMinutes()).padStart(2,'0');
+return `${Y}.${M}.${D} ${h}:${m}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("themeToggle").addEventListener("click", () => {
     nightMode = !nightMode;
@@ -279,8 +289,20 @@ function displayEvents(startDate, endDate) {
         `;
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
+        //const tooltip = new google.maps.InfoWindow({
+        //  content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
+        //});
+        const from = formatDD(event["Data od"]);
+        const to   = formatDD(event["Data do"]);
         const tooltip = new google.maps.InfoWindow({
-          content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
+          content: `
+            <div style="font-family:'Arial Black',sans-serif;font-weight:bold;margin:0;padding:2px 6px;background:lightgray;">
+              ${event.Nazwa}
+            </div>
+            <div style="font-family:Arial,sans-serif;margin:0;padding:0 6px 4px;background:lightgray;">
+              ${from} – ${to}
+            </div>
+          `
         });
 
         marker.addListener("click", () => infowindow.open(map, marker));
