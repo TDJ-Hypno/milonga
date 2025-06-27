@@ -7,73 +7,13 @@
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100%; width: 100%; }
-
-    #selectedFilter {
-      background-color: lightgray;
-      border-radius: 8px;
-      padding: 4px 8px;
-      font-family: 'Arial', sans-serif;
-      font-size: 10px;
-      display: inline-block;
-    }
-
-    .custom-button {
-      background-color: lightgray;
-      border-radius: 8px;
-      padding: 6px 10px;
-      border: 2px solid #888;
-      font-family: 'Arial Black', sans-serif;
-      cursor: pointer;
-    }
-
-    .info-panel {
-      position: absolute;
-      bottom: 55px;
-      left: 10px;
-      background: lightgray;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-family: 'Arial Black', sans-serif;
-      font-size: 10px;
-      z-index: 5;
-      cursor: pointer;
-    }
-    .legend {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: lightgray;
-      padding: 10px;
-      border-radius: 8px;
-      font-family: 'Arial Black', sans-serif;
-      font-size: 9px;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
+    #selectedFilter { background-color: lightgray; border-radius: 8px; padding: 4px 8px; font-family: 'Arial', sans-serif; font-size: 10px; display: inline-block; }
+    .custom-button { background-color: lightgray; border-radius: 8px; padding: 6px 10px; border: 2px solid #888; font-family: 'Arial Black', sans-serif; cursor: pointer; }
+    .info-panel { position: absolute; bottom: 55px; left: 10px; background: lightgray; padding: 8px 12px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 5; cursor: pointer; }
+    .legend { position: absolute; bottom: 10px; left: 10px; background: lightgray; padding: 10px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 9px; display: flex; gap: 15px; align-items: center; }
     .legend-icon { width: 16px; height: 16px; }
-
-    /* Tooltip obok info-panel */
-    #contactTooltip {
-      display: none;
-      position: absolute;
-      bottom: 85px;
-      left: 10px;
-      background: lightgray;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-family: 'Arial Black', sans-serif;
-      font-size: 10px;
-      z-index: 6;
-    }
-    #contactTooltip button {
-      margin-right: 6px;
-      padding: 4px 8px;
-      border: 1px solid #888;
-      border-radius: 4px;
-      cursor: pointer;
-      background: white;
-    }
+    #contactTooltip { display: none; position: absolute; bottom: 85px; left: 10px; background: lightgray; padding: 8px 12px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 6; }
+    #contactTooltip button { margin-right: 6px; padding: 4px 8px; border: 1px solid #888; border-radius: 4px; cursor: pointer; background: white; }
   </style>
 </head>
 <body>
@@ -81,6 +21,22 @@
     <button id="themeToggle" class="custom-button">Tryb nocny</button>
     <button onclick="openFilterModal()" class="custom-button">Filtruj</button>
     <div id="selectedFilter">Wybrano: wszystkie</div>
+  </div>
+
+  <div id="map"></div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń</div>
+  <div id="contactTooltip">
+    <p>Napiszesz do mnie?</p>
+    <button id="contactYes">Tak</button>
+    <button id="contactNo">Nie</button>
+  </div>
+
+  <div class="legend">
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/green-dot.png"> Kolejne</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Zakończone</div>
   </div>
 
   <!-- Modal filtrów -->
@@ -104,90 +60,165 @@
     <button onclick="applyFilter()">Filtruj</button>
   </div>
 
-  <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.092)</div>
-  <div class="legend">
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/green-dot.png"> Kolejne</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Zakończone</div>
-  </div>
-
-  <!-- Tooltip kontaktu -->
-  <div id="contactTooltip">
-    <p>Napiszesz do mnie?</p>
-    <button id="contactYes">Tak</button>
-    <button id="contactNo">Nie</button>
-  </div>
-
   <script>
     let map, markers = [], eventsData = [], nightMode = false;
 
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), { zoom: 10, center: { lat: 52.1, lng: 19.4 } });
+      loadData();
+    }
+
     function loadData() {
-      fetch("https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1")
+      fetch('https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1')
         .then(res => res.json())
         .then(data => {
           eventsData = data;
-          navigator.geolocation.getCurrentPosition(
-            pos => initMap(pos.coords.latitude, pos.coords.longitude),
-            ()  => initMap(52.1, 19.4)
-          );
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+              map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+              displayEvents(new Date(2000,1,1), new Date(3000,1,1));
+            }, () => displayEvents(new Date(2000,1,1), new Date(3000,1,1)));
+          } else {
+            displayEvents(new Date(2000,1,1), new Date(3000,1,1));
+          }
         });
     }
 
-    function initMap(lat, lng) {
-      map = new google.maps.Map(document.getElementById("map"), { zoom: 10, center: { lat, lng } });
-      displayEvents(new Date(2000,1,1), new Date(3000,1,1));
-    }
-
-    function openFilterModal() { document.getElementById("filterModal").style.display = "block"; }
-    function toggleDateInputs() { document.getElementById("dateInputs").style.display = document.getElementById("filterSelect").value === "range" ? "block" : "none"; }
+    function openFilterModal() { document.getElementById('filterModal').style.display = 'block'; }
+    function toggleDateInputs() { document.getElementById('dateInputs').style.display = document.getElementById('filterSelect').value === 'range' ? 'block' : 'none'; }
 
     function applyFilter() {
-      const filter = document.getElementById("filterSelect").value;
+      const filter = document.getElementById('filterSelect').value;
       const now = new Date();
-      let from = new Date(2000,1,1), to = new Date(3000,1,1), label = "";
-      const startOfWeek = d => { const dt=new Date(d); dt.setDate(dt.getDate()-dt.getDay()+1); dt.setHours(0,0,0,0); return dt; };
-      const endOfWeek   = d => { const dt=startOfWeek(d); dt.setDate(dt.getDate()+6); dt.setHours(23,59,59,999); return dt; };
+      let from = new Date(2000,1,1), to = new Date(3000,1,1), label = '';
+      const startOfWeek = d => { const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay() + 1); dt.setHours(0,0,0,0); return dt; };
+      const endOfWeek = d => { const dt = startOfWeek(d); dt.setDate(dt.getDate() + 6); dt.setHours(23,59,59,999); return dt; };
       switch(filter) {
-        case "today":      from=new Date(now); from.setHours(0,0,0,0); to=new Date(now); to.setHours(23,59,59,999); label="Wybrano: dzisiaj"; break;
-        case "next3days": from=new Date(now); from.setHours(0,0,0,0); to=new Date(from); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); label="Wybrano: najbliższe 3 dni"; break;
-        case "week":       from=startOfWeek(now); to=endOfWeek(now); label="Wybrano: ten tydzień"; break;
-        case "weekend":    from=startOfWeek(now); from.setDate(from.getDate()+4); from.setHours(0,0,0,0); to=new Date(from); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); label="Wybrano: ten weekend"; break;
-        case "nextweek":   from=startOfWeek(now); from.setDate(from.getDate()+7); from.setHours(0,0,0,0); to=endOfWeek(from); label="Wybrano: następny tydzień"; break;
-        case "nextweekend":from=startOfWeek(now); from.setDate(from.getDate()+11); from.setHours(0,0,0,0); to=new Date(from); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); label="Wybrano: następny weekend"; break;
-        case "range":      { const d1=document.getElementById("dateFrom").value, d2=document.getElementById("dateTo").value; if(!d1||!d2||new Date(d2)<new Date(d1)){ alert("Nieprawidłowy zakres dat."); return; } from=new Date(d1); from.setHours(0,0,0,0); to=new Date(d2); to.setHours(23,59,59,999); label=`Wybrano zakres od ${d1} do ${d2}`; } break;
-        case "ended":      from=new Date(2000,1,1); to=new Date(now); to.setHours(23,59,59,999); label="Wybrano: zakończone"; break;
-        default:            label="Wybrano: wszystkie";
+        case 'today':
+          from = new Date(now); from.setHours(0,0,0,0);
+          to   = new Date(now); to.setHours(23,59,59,999);
+          label = 'Wybrano: dzisiaj'; break;
+        case 'next3days':
+          from = new Date(now); from.setHours(0,0,0,0);
+          to   = new Date(from); to.setDate(to.getDate() + 2); to.setHours(23,59,59,999);
+          label = 'Wybrano: najbliższe 3 dni'; break;
+        case 'week':
+          from = startOfWeek(now); to = endOfWeek(now);
+          label = 'Wybrano: ten tydzień'; break;
+        case 'weekend':
+          from = startOfWeek(now); from.setDate(from.getDate() + 4); from.setHours(0,0,0,0);
+          to   = new Date(from); to.setDate(to.getDate() + 2); to.setHours(23,59,59,999);
+          label = 'Wybrano: ten weekend'; break;
+        case 'nextweek':
+          from = startOfWeek(now); from.setDate(from.getDate() + 7); from.setHours(0,0,0,0);
+          to   = endOfWeek(from);
+          label = 'Wybrano: następny tydzień'; break;
+        case 'nextweekend':
+          from = startOfWeek(now); from.setDate(from.getDate() + 11); from.setHours(0,0,0,0);
+          to   = new Date(from); to.setDate(to.getDate() + 2); to.setHours(23,59,59,999);
+          label = 'Wybrano: następny weekend'; break;
+        case 'range': {
+          const d1 = document.getElementById('dateFrom').value;
+          const d2 = document.getElementById('dateTo').value;
+          if (!d1 || !d2 || new Date(d2) < new Date(d1)) {
+            alert('Nieprawidłowy zakres dat.');
+            return;
+          }
+          from = new Date(d1); from.setHours(0,0,0,0);
+          to   = new Date(d2); to.setHours(23,59,59,999);
+          label = `Wybrano zakres od ${d1} do ${d2}`;
+        } break;
+        case 'ended':
+          from = new Date(2000,1,1);
+          to   = new Date(now); to.setHours(23,59,59,999);
+          label = 'Wybrano: zakończone'; break;
+        default:
+          label = 'Wybrano: wszystkie';
       }
-      document.getElementById("selectedFilter").textContent = label;
-      document.getElementById("filterModal").style.display = "none";
+      document.getElementById('selectedFilter').textContent = label;
+      document.getElementById('filterModal').style.display   = 'none';
       displayEvents(from, to);
     }
 
     function displayEvents(startDate, endDate) {
-      const now = new Date(), today = new Date(now); today.setHours(0,0,0,0);
-      markers.forEach(m=>m.setMap(null)); markers=[];
+      const now = new Date();
+      const today = new Date(now); today.setHours(0,0,0,0);
+      markers.forEach(m => m.setMap(null)); markers = [];
       const geocoder = new google.maps.Geocoder();
-      function fmtCal(s){const d=new Date(s); return d.toISOString().replace(/-|:|\.\d{3}/g,'');}
-      const ended = eventsData.filter(e=>new Date(e["Data do"])<today).sort((a,b)=>new Date(a["Data od"]) - new Date(b["Data od"]));
-      const future= eventsData.filter(e=>new Date(e["Data do"])>=today).sort((a,b)=>new Date(b["Data od"]) - new Date(a["Data od"]));
-      [...ended,...future].forEach((ev,i)=>{const s=new Date(ev["Data od"]), e=new Date(ev["Data do"]); if(s> endDate||e< startDate) return; geocoder.geocode({address:ev.Adres},(res,st)=>{if(st!="OK")return; const pos=res[0].geometry.location; const d=Math.floor((s-today)/(1000*60*60*24)); let col="blue"; if(d===0)col="red";else if(d===1)col="orange";else if(d===2)col="yellow";else if(d>2)col="green"; const m=new google.maps.Marker({map,position:pos,optimized:false,zIndex:i,icon:{url:`https://maps.google.com/mapfiles/ms/icons/${col}-dot.png`},title:`${ev.Nazwa}\n${ev["Data od"]} – ${ev["Data do"]}`}); markers.push(m); let cs=""; if(s>now){const sf=fmtCal(ev["Data od"]), ef=fmtCal(ev["Data do"]); cs=`<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${sf}/${ef}&details=${encodeURIComponent(ev.Informacje+"\n"+ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`;} const iw=new google.maps.InfoWindow({content:`<div style="font-family:'Arial Black', sans-serif;"><h3>${ev.Nazwa}</h3><p><strong>Adres:</strong>${ev.Adres}</p><p><strong>Od:</strong>${ev["Data od"]}</p><p><strong>Do:</strong>${ev["Data do"]}</p><p><strong>Parkietowe:</strong>${ev.Parkietowe}</p><p><strong>Organizator:</strong>${ev.Organizator}</p><p><strong>TDJ:</strong>${ev.TDJ}</p><p><strong>Typ muzyki:</strong>${ev["Typ muzyki"]}</p><p><strong>Info:</strong>${ev.Informacje}</p><p><a href="${ev.Link}" target="_blank">Link do wydarzenia</a></p><p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Wyznacz trasę</button></a></p>${cs}</div>`}); m.addListener('click',()=>iw.open(map,m)); }); });
+      function formatDateForCalendar(s) { const d = new Date(s); return d.toISOString().replace(/-|:|\.\d{3}/g,''); }
+      const ended   = eventsData.filter(e => new Date(e['Data do']) < today)
+        .sort((a,b) => new Date(a['Data od']) - new Date(b['Data od']));
+      const future  = eventsData.filter(e => new Date(e['Data do']) >= today)
+        .sort((a,b) => new Date(b['Data od']) - new Date(a['Data od']));
+      const ordered = [...ended, ...future];
+      ordered.forEach((ev, i) => {
+        const start = new Date(ev['Data od']);
+        const end   = new Date(ev['Data do']);
+        if (start > endDate || end < startDate) return;
+        geocoder.geocode({ address: ev.Adres }, (res, st) => {
+          if (st !== 'OK') return;
+          const pos = res[0].geometry.location;
+          const dd  = Math.floor((start - today) / (1000*60*60*24));
+          let color = 'blue';
+          if (dd === 0) color = 'red';
+          else if (dd === 1) color = 'orange';
+          else if (dd === 2) color = 'yellow';
+          else if (dd > 2) color = 'green';
+          const marker = new google.maps.Marker({
+            map, position: pos, optimized: false, zIndex: i,
+            icon: { url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png` },
+            title: `${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`
+          });
+          markers.push(marker);
+          let cs = '';
+          if (start > now) {
+            cs = `<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${formatDateForCalendar(ev['Data od'])}/${formatDateForCalendar(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje+'\n'+ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`;
+          }
+          const content = `
+            <div style="font-family:'Arial Black', sans-serif;">
+              <h3>${ev.Nazwa}</h3>
+              <p><strong>Adres:</strong> ${ev.Adres}</p>
+              <p><strong>Od:</strong> ${ev['Data od']}</p>
+              <p><strong>Do:</strong> ${ev['Data do']}</p>
+              <p><strong>Parkietowe:</strong> ${ev.Parkietowe}</p>
+              <p><strong>Organizator:</strong> ${ev.Organizator}</p>
+              <p><strong>TDJ:</strong> ${ev.TDJ}</p>
+              <p><strong>Typ muzyki:</strong> ${ev['Typ muzyki']}</p>
+              <p><strong>Info:</strong> ${ev.Informacje}</p>
+              <p><a href="${ev.Link}" target="_blank">Link do wydarzenia</a></p>
+              <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Wyznacz trasę</button></a></p>
+              ${cs}
+            </div>
+          `;
+          const iw = new google.maps.InfoWindow({ content });
+          marker.addListener('click', () => iw.open(map, marker));
+        });
+      });
     }
 
-    document.addEventListener('DOMContentLoaded',()=>{
-      const panel=document.querySelector('.info-panel');
-      const tip=document.getElementById('contactTooltip');
-      const yes=document.getElementById('contactYes');
-      const no=document.getElementById('contactNo');
-      panel.addEventListener('click',()=>{ tip.style.display = tip.style.display==='block' ? 'none' : 'block'; });
-      yes.addEventListener('click',e=>{ e.stopPropagation(); tip.style.display='none'; window.open('https://m.me/tdj.hypno.piotr.smolen','_blank'); });
-      no.addEventListener('click', e=>{ e.stopPropagation(); tip.style.display='none'; });
-      document.addEventListener('click', e=>{ if(!panel.contains(e.target) && !tip.contains(e.target)) tip.style.display='none'; });
+    document.addEventListener('DOMContentLoaded', () => {
+      const panel = document.querySelector('.info-panel');
+      const tip   = document.getElementById('contactTooltip');
+      const yes   = document.getElementById('contactYes');
+      const no    = document.getElementById('contactNo');
+      panel.addEventListener('click', () => {
+        tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
+      });
+      yes.addEventListener('click', e => {
+        e.stopPropagation();
+        tip.style.display = 'none';
+        window.open('https://m.me/tdj.hypno.piotr.smolen', '_blank');
+      });
+      no.addEventListener('click', e => {
+        e.stopPropagation();
+        tip.style.display = 'none';
+      });
+      document.addEventListener('click', e => {
+        if (!panel.contains(e.target) && !tip.contains(e.target)) tip.style.display = 'none';
+      });
     });
 
-    window.initMap = loadData;
+    window.initMap = initMap;
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
