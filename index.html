@@ -28,8 +28,8 @@
 
     .info-panel {
       position: absolute;
-      top: 10px;
-      right: 60px;
+      bottom: 25px;
+      left: 10px;
       background: lightgray;
       padding: 8px 12px;
       border-radius: 8px;
@@ -105,7 +105,7 @@
 </div>
 
 <div id="map"></div>
-<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.091)</div>
+<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.092)</div>
 <div class="legend">
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -118,6 +118,7 @@
 <div id="contactTooltip">
   <p>Czy chcesz skontaktować się ze mną?</p>
   <button id="contactYes">Tak</button>
+  <button id="contactNo">Nie</button>
 </div>
 
 <script>
@@ -185,6 +186,7 @@ document.addEventListener('DOMContentLoaded',function(){
   const infoPanel=document.querySelector('.info-panel');
   const tooltip=document.getElementById('contactTooltip');
   const btn=document.getElementById('contactYes');
+  const btn=document.getElementById('contactNo');
 
   function showTooltip(){
     clearTimeout(hideTimeout);
