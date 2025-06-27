@@ -5,8 +5,15 @@
   <title>Mapa milong</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
-    #map { height: 100%; width: 100%; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
     .info-panel {
       position: absolute;
       top: 10px;
@@ -27,7 +34,6 @@
       border-radius: 8px;
       font-size: 12px;
       font-family: 'Arial Black', sans-serif;
-      font-weight: bold;
       display: flex;
       gap: 15px;
       align-items: center;
@@ -36,47 +42,37 @@
       width: 16px;
       height: 16px;
     }
-
-    /* Styl dla obu przycisków */
-    #themeToggle,
-    #filterButton {
-      background-color: lightgray;              /* tło */
-      font-family: 'Arial Black', sans-serif;   /* czcionka */
-      font-weight: bold;                        /* pogrubienie */
-      border: 2px solid #333;     /* grubsza, ciemna linia */
-      border-radius: 6px;         /* zaokrąglone rogi */
-      padding: 6px 12px;          /* możesz nieznacznie zwiększyć padding */
-      cursor: pointer;                          /* pokazuje rękę przy najechaniu */
+    #filterModal, select, input[type="date"] {
+      background: lightgray;
+      font-family: Arial, sans-serif;
     }
-    
-    /* Opcjonalnie: efekt podświetlenia przy hover */
-    #themeToggle:hover,
-    #filterButton:hover {
-      background-color: #d3d3d3;
-      border-color: #000;         /* na hover można przyciemnić obramowanie */
+    .gm-style-iw-t {
+      display: none !important;
     }
-    
+    .gm-style .gm-style-iw-c {
+      background: lightgray;
+      font-family: 'Arial Black', sans-serif;
+    }
   </style>
 </head>
 <body>
 <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
   <button id="themeToggle" style="padding: 6px 10px;">Tryb nocny</button>
-  <button id="filterButton" onclick="openFilterModal()" style="padding: 6px 10px;">Filtruj</button>
+  <button onclick="openFilterModal()" style="padding: 6px 10px;">Filtruj</button>
   <div id="selectedFilter" style="margin-left: 10px; font-weight: bold;"></div>
 </div>
 
-<!-- Modal filtrów -->
 <div id="filterModal" style="display:none; position:fixed;top:50px;left:50%;transform:translateX(-50%);
      background:lightgray;padding:20px;border:1px solid #ccc;z-index:1000;border-radius:8px;">
   <h3>Pokaż wydarzenia</h3>
   <select id="filterSelect" onchange="toggleDateInputs()">
-    <option value="all">Wszystkie</option>
-    <option value="today">Dzisiaj</option>
-    <option value="week">Ten tydzień</option>
-    <option value="weekend">Ten weekend</option>
-    <option value="nextweek">Następny tydzień</option>
-    <option value="nextweekend">Następny weekend</option>
-    <option value="range">W zakresie</option>
+    <option value="all">wszystkie</option>
+    <option value="today">dzisiaj</option>
+    <option value="week">ten tydzień</option>
+    <option value="weekend">ten weekend</option>
+    <option value="nextweek">następny tydzień</option>
+    <option value="nextweekend">następny weekend</option>
+    <option value="range">w zakresie</option>
   </select><br><br>
   <div id="dateInputs" style="display:none;">
     <label>Od: <input type="date" id="dateFrom"></label><br><br>
@@ -86,98 +82,16 @@
 </div>
 
 <div id="map"></div>
-<div class="info-panel">Opracowane przez: TDj "Hypno" Piotr Smoleń</div>
+<div class="info-panel">TDj "Hypno" Piotr Smoleń</div>
 <div class="legend">
   <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
   <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
   <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> Przyszłe</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> Pozostałe</div>
   <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Minione</div>
 </div>
 
 <script>
-
-const nightModeStyles = [
-  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }]
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#263c3f" }]
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#6b9a76" }]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry",
-    stylers: [{ color: "#38414e" }]
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#212a37" }]
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#9ca5b3" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#746855" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#1f2835" }]
-  },
-  {
-    featureType: "road.highway",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#f3d19c" }]
-  },
-  {
-    featureType: "transit",
-    elementType: "geometry",
-    stylers: [{ color: "#2f3948" }]
-  },
-  {
-    featureType: "transit.station",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#d59563" }]
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#17263c" }]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#515c6d" }]
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#17263c" }]
-  }
-];
-  
 let map;
 let markers = [];
 let eventsData = [];
@@ -189,8 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("themeToggle").textContent = nightMode ? "Tryb dzienny" : "Tryb nocny";
     if (map) {
       map.setOptions({
-        // styles: nightMode ? [{ elementType: 'geometry', stylers: [{ color: '#242f3e' }] }] : null
-        styles: nightMode ? nightModeStyles : null
+        styles: nightMode ? [{ elementType: 'geometry', stylers: [{ color: '#242f3e' }] }] : null
       });
     }
   });
@@ -229,6 +142,17 @@ function formatDateForCalendar(dateStr) {
   return dt.toISOString().replace(/-|:|\.\d\d\d/g,"");
 }
 
+function formatTooltip(startStr, endStr) {
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  const sDate = start.toLocaleDateString();
+  const sTime = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const eTime = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return (sDate === end.toLocaleDateString())
+    ? `${sDate} ${sTime}–${eTime}`
+    : `${startStr} – ${endStr}`;
+}
+
 function displayEvents(startDate, endDate) {
   const now = new Date();
   markers.forEach(marker => marker.setMap(null));
@@ -236,10 +160,13 @@ function displayEvents(startDate, endDate) {
 
   const geocoder = new google.maps.Geocoder();
   eventsData.slice().reverse().forEach((event) => {
+    const start = new Date(event["Data od"]);
+    const end = new Date(event["Data do"]);
+    if (start > endDate || end < startDate) return;
+
     geocoder.geocode({ address: event.Adres }, (results, status) => {
       if (status === "OK") {
         const position = results[0].geometry.location;
-        const start = new Date(event["Data od"]);
         const today = new Date(now); today.setHours(0,0,0,0);
         const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
         let color = "blue";
@@ -254,7 +181,7 @@ function displayEvents(startDate, endDate) {
           icon: {
             url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
           },
-          title: `${event.Nazwa} — ${new Date(event["Data od"]).toLocaleDateString()} ${new Date(event["Data od"]).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+          title: `${event.Nazwa}`
         });
 
         markers.push(marker);
@@ -273,32 +200,20 @@ function displayEvents(startDate, endDate) {
             <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
             <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
                <button>Wyznacz trasę do tego miejsca</button></a></p>
-            ${new Date(event["Data od"]) > new Date() ? `<p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "\n" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
+            ${start > new Date() ? `<p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "
+" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
                <button>Dodaj do mojego kalendarza</button></a></p>` : ""}
           </div>
         `;
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        //const tooltip = new google.maps.InfoWindow({
-        //  content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
-        //});
-        const from = formatDD(event["Data od"]);
-        const to   = formatDD(event["Data do"]);
         const tooltip = new google.maps.InfoWindow({
-          content: `
-            <div style="font-family:'Arial Black',sans-serif;font-weight:bold;margin:0;padding:2px 6px;background:lightgray;">
-              ${event.Nazwa}
-            </div>
-            <div style="font-family:Arial,sans-serif;margin:0;padding:0 6px 4px;background:lightgray;">
-              ${from} – ${to}
-            </div>
-          `
+          content: formatTooltip(event["Data od"], event["Data do"]),
         });
 
         marker.addListener("click", () => infowindow.open(map, marker));
-        // marker.addListener("mouseover", () => tooltip.open(map, marker));
-        // marker.addListener("mouseout", () => tooltip.close());
-
+        marker.addListener("mouseover", () => tooltip.open(map, marker));
+        marker.addListener("mouseout", () => tooltip.close());
       }
     });
   });
