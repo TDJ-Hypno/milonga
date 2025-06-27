@@ -200,8 +200,7 @@ document.addEventListener('DOMContentLoaded',function(){
     },200);
   }
 
-  infoPanel.addEventListener('mouseenter',showTooltip);
-  infoPanel.addEventListener('mouseleave',scheduleHide);
+  infoPanel.addEventListener('click',showTooltip);
   tooltip.addEventListener('mouseenter',()=>clearTimeout(hideTimeout));
   tooltip.addEventListener('mouseleave',scheduleHide);
   btn.addEventListener('click',function(e){ e.stopPropagation(); window.open('https://m.me/tdj.hypno.piotr.smolen','_blank'); });
