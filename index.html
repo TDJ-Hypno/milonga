@@ -83,7 +83,7 @@
 </div>
 
 <div id="map"></div>
-<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.084)</div>
+<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.085)</div>
 <div class="legend">
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -182,114 +182,102 @@ function applyFilter() {
 }
 
 function displayEvents(startDate, endDate) {
-  // funkcja pomocnicza JS: jeśli data w eventsData ma format "DD.MM.YYYY"
-  function parseDate(str) {
-    const [d, m, y] = str.split('.');
-    return new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`);
-  }
+  console.clear();
+  console.log("displayEvents()", { startDate, endDate, totalEvents: eventsData.length });
 
-  const now = new Date();
-  // usuń stare markery
+  // 1. Wyczyść poprzednie markery
   markers.forEach(m => m.setMap(null));
   markers = [];
 
+  const now = new Date();
   const geocoder = new google.maps.Geocoder();
-  // jedno wspólne InfoWindow
   const infoWindow = new google.maps.InfoWindow();
 
-  // sortuj rosnąco po dacie rozpoczęcia
-  const sorted = eventsData
+  // 2. Upewnij się, że startDate/endDate mają czas na 00:00:00
+  startDate.setHours(0,0,0,0);
+  endDate.setHours(23,59,59,999);
+
+  // 3. Sortuj rosnąco (najstarsze pierwsze)
+  eventsData
     .slice()
-    .sort((a, b) => parseDate(a["Data od"]) - parseDate(b["Data od"]));
+    .sort((a, b) => new Date(a["Data od"]) - new Date(b["Data od"]))
+    .forEach(event => {
+      const start = new Date(event["Data od"]);
+      const end   = new Date(event["Data do"]);
 
-  sorted.forEach(event => {
-    const start = parseDate(event["Data od"]);
-    const end   = parseDate(event["Data do"]);
-
-    // filtruj
-    if (start > endDate || end < startDate) return;
-
-    geocoder.geocode({ address: event.Adres }, (results, status) => {
-      if (status !== "OK") {
-        console.warn(`Geocode failed for ${event.Adres}: ${status}`);
+      // 4. Filtr
+      if (start > endDate || end < startDate) {
+        console.log("→ pomijam (poza zakresem):", event.Nazwa, start, end);
         return;
       }
+      console.log("→ geokoduję:", event.Nazwa, event.Adres);
 
-      const position = results[0].geometry.location;
-      const dayDiff  = Math.floor((start - now) / (1000 * 60 * 60 * 24));
+      // 5. Geokodowanie
+      geocoder.geocode({ address: event.Adres }, (results, status) => {
+        if (status !== "OK") {
+          console.warn("❌ geocode failed:", status, event.Adres);
+          return;
+        }
 
-      // wybór koloru
-      let color = "blue";
-      if      (dayDiff === 0) color = "red";
-      else if (dayDiff === 1) color = "orange";
-      else if (dayDiff === 2) color = "yellow";
-      else if (dayDiff > 2)   color = "green";
+        const position = results[0].geometry.location;
+        const dayDiff = Math.floor((start - now) / (1000 * 60 * 60 * 24));
+        let color = "blue";
+        if      (dayDiff === 0) color = "red";
+        else if (dayDiff === 1) color = "orange";
+        else if (dayDiff === 2) color = "yellow";
+        else if (dayDiff > 2)   color = "green";
 
-      // zIndex = sekundy od epoki
-      const zIndex = Math.floor(start.getTime() / 1000);
+        // 6. Tworzenie markera
+        const marker = new google.maps.Marker({
+          map,
+          position,
+          optimized: false,  // potrzebne, żeby zIndex zadziałało
+          zIndex: Math.floor(start.getTime() / 1000),
+          icon: {
+            url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`
+          },
+          title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
+        });
+        markers.push(marker);
+        console.log("✅ dodano marker:", event.Nazwa, color);
 
-      const marker = new google.maps.Marker({
-        map,
-        position,
-        optimized: false,                     // żeby zIndex zadziałał
-        zIndex,
-        icon: {
-          url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`
-        },
-        title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
-      });
-      markers.push(marker);
-
-      // przygotuj treść okienka
-      const infoContent = `
-        <div style="font-family:'Arial Black', sans-serif;">
-          <h3>${event.Nazwa}</h3>
-          <p><strong>Adres:</strong> ${event.Adres}</p>
-          <p><strong>Od:</strong> ${event["Data od"]}</p>
-          <p><strong>Do:</strong> ${event["Data do"]}</p>
-          <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
-          <p><strong>Organizator:</strong> ${event.Organizator}</p>
-          <p><strong>TDJ:</strong> ${event.TDJ}</p>
-          <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
-          <p><strong>Info:</strong> ${event.Informacje}</p>
-          <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
-          <p>
-            <a
-              href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}"
-              target="_blank"
-            >
-              <button>Wyznacz trasę</button>
-            </a>
-          </p>
-          ${
-            start > now
+        // 7. Przygotuj InfoWindow
+        const infoContent = `
+          <div style="font-family:'Arial Black', sans-serif;">
+            <h3>${event.Nazwa}</h3>
+            <p><strong>Adres:</strong> ${event.Adres}</p>
+            <p><strong>Od:</strong> ${event["Data od"]}</p>
+            <p><strong>Do:</strong> ${event["Data do"]}</p>
+            <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
+            <p><strong>Organizator:</strong> ${event.Organizator}</p>
+            <p><strong>TDJ:</strong> ${event.TDJ}</p>
+            <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
+            <p><strong>Info:</strong> ${event.Informacje}</p>
+            <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
+            <p>
+              <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
+                <button>Wyznacz trasę</button>
+              </a>
+            </p>
+            ${start > now
               ? `<p>
-                   <a
-                     href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-                       event.Nazwa
-                     )}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(
-                       event["Data do"]
-                     )}&details=${encodeURIComponent(event.Informacje + "\n" + event.Link)}&location=${encodeURIComponent(
-                       event.Adres
-                     )}"
-                     target="_blank"
-                   >
+                   <a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "\n" + event.Link)}&location=${encodeURIComponent(event.Adres)}" target="_blank">
                      <button>Dodaj do kalendarza</button>
                    </a>
                  </p>`
-              : ""
-          }
-        </div>
-      `;
+              : ""}
+          </div>
+        `;
 
-      // klik — ustawiasz zawartość wspólnego InfoWindow i otwierasz
-      marker.addListener("click", () => {
-        infoWindow.setContent(infoContent);
-        infoWindow.open(map, marker);
+        // 8. Listener kliknięcia
+        marker.addListener("click", () => {
+          infoWindow.setContent(infoContent);
+          infoWindow.open(map, marker);
+        });
       });
     });
-  });
 }
+
 
 
 
