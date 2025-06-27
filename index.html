@@ -24,7 +24,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.094)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.095)</div>
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
@@ -105,7 +105,7 @@
       };
       document.getElementById('selectedFilter').textContent = 'Wybrano: ' + (labels[f] || (f==='range'?`zakres od ${document.getElementById('dateFrom').value} do ${document.getElementById('dateTo').value}`:'wszystkie'));
       document.getElementById('filterModal').style.display = 'none';
-      const now = new Date(), from = new Date(now), to = new Date(now);
+      const now = new Date(); let from = new Date(now), to = new Date(now);
       switch(f) {
         case 'all':
           from = new Date(2000,1,1);
