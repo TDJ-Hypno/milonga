@@ -182,6 +182,7 @@ function applyFilter() {
 }
 
 function displayEvents(startDate, endDate) {
+  const now = new Date();
   markers.forEach(marker => marker.setMap(null));
   markers = [];
 
