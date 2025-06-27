@@ -74,6 +74,7 @@
     <option value="nextweek">następny tydzień</option>
     <option value="nextweekend">następny weekend</option>
     <option value="range">w zakresie</option>
+    <option value="past">zakończone</option>
   </select><br><br>
   <div id="dateInputs" style="display:none;">
     <label>Od: <input type="date" id="dateFrom"></label><br><br>
@@ -156,6 +157,11 @@ function applyFilter() {
   }
 
   switch(filter) {
+    case "past":
+      to = new Date(now);
+      to.setHours(0,0,0,0);
+      label = "Wybrano: zakończone";
+      break;
     case "today": from = new Date(now); from.setHours(0,0,0,0); to = new Date(now); to.setHours(23,59,59,999); label = "Pokaż: dzisiaj"; break;
     case "week": from = startOfWeek(now); to = endOfWeek(now); label = "Pokaż: ten tydzień"; break;
     case "weekend": from = startOfWeek(now); from.setDate(from.getDate() + 4); to = new Date(from); to.setDate(to.getDate() + 2); label = "Pokaż: ten weekend"; break;
