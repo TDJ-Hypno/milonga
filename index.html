@@ -69,6 +69,7 @@
   <select id="filterSelect" onchange="toggleDateInputs()">
     <option value="all">wszystkie</option>
     <option value="today">dzisiaj</option>
+    <option value="next3days">dzisiaj</option>
     <option value="week">ten tydzień</option>
     <option value="weekend">ten weekend</option>
     <option value="nextweek">następny tydzień</option>
@@ -83,7 +84,7 @@
 </div>
 
 <div id="map"></div>
-<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.088)</div>
+<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.089)</div>
 <div class="legend">
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -157,6 +158,7 @@ function applyFilter() {
 
   switch(filter) {
     case "today": from = new Date(now); from.setHours(0,0,0,0); to = new Date(now); to.setHours(23,59,59,999); label = "Pokaż: dzisiaj"; break;
+    case "next3days": from = new Date(now); from.setHours(0,0,0,0); to = new Date(from); to.setDate(to.getDate() + 2); label = "Pokaż: najbliższe 3 dni"; break;
     case "week": from = startOfWeek(now); to = endOfWeek(now); label = "Pokaż: ten tydzień"; break;
     case "weekend": from = startOfWeek(now); from.setDate(from.getDate() + 4); to = new Date(from); to.setDate(to.getDate() + 2); label = "Pokaż: ten weekend"; break;
     case "nextweek": from = startOfWeek(now); from.setDate(from.getDate() + 7); to = endOfWeek(from); label = "Pokaż: następny tydzień"; break;
