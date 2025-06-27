@@ -83,7 +83,7 @@
 </div>
 
 <div id="map"></div>
-<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.087)</div>
+<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.088)</div>
 <div class="legend">
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -182,10 +182,15 @@ function applyFilter() {
 }
 
 function displayEvents(startDate, endDate) {
-  const now = new Date();
+  const now   = new Date();
+  const today = new Date(now);
+  today.setHours(0,0,0,0);
+
   // 1. Usuń wszystkie istniejące markery
   markers.forEach(m => m.setMap(null));
   markers = [];
+
+  const geocoder = new google.maps.Geocoder();
 
   // 2. Funkcja pomocnicza do formatu dla Google Calendar
   function formatDateForCalendar(dateStr) {
@@ -193,52 +198,51 @@ function displayEvents(startDate, endDate) {
     return dt.toISOString().replace(/-|:|\.\d\d\d/g, "");
   }
 
-  const geocoder = new google.maps.Geocoder();
-
   // 3. Podziel wydarzenia na zakończone i przyszłe
   const endedEvents = eventsData
-    .filter(e => new Date(e["Data do"]) < now)
+    .filter(e => new Date(e["Data do"]) < today)
     .sort((a, b) => new Date(a["Data od"]) - new Date(b["Data od"]));
 
   const futureEvents = eventsData
-    .filter(e => new Date(e["Data do"]) >= now)
-    // sortujemy malejąco po dacie początku (farthest first)
+    .filter(e => new Date(e["Data do"]) >= today)
     .sort((a, b) => new Date(b["Data od"]) - new Date(a["Data od"]));
 
-  // 4. Połącz w jedną tablicę: najpierw zakończone, potem przyszłe
-  const ordered = [...endedEvents, ...futureEvents];
+  // 4. Połącz w jedną tablicę: najpierw zakończone, potem przyszłe (farthest first)
+  const orderedEvents = [...endedEvents, ...futureEvents];
 
   // 5. Iteruj w nowej kolejności
-  ordered.forEach(event => {
+  orderedEvents.forEach((event, index) => {
     const start = new Date(event["Data od"]);
     const end   = new Date(event["Data do"]);
 
-    // filtr zakresu
+    // filtruj poza zakresem dat
     if (start > endDate || end < startDate) return;
 
     geocoder.geocode({ address: event.Adres }, (results, status) => {
       if (status !== "OK") return;
 
       const position = results[0].geometry.location;
-      const today    = new Date(now); today.setHours(0,0,0,0);
       const dayDiff  = Math.floor((start - today) / (1000 * 60 * 60 * 24));
 
-      // wybór koloru
+      // dobór koloru markera
       let color = "blue";
       if      (dayDiff === 0) color = "red";
       else if (dayDiff === 1) color = "orange";
       else if (dayDiff === 2) color = "yellow";
       else if (dayDiff > 2)   color = "green";
 
+      // 6. Stwórz marker z kontrolowaną kolejnością (zIndex) i bez optymalizacji
       const marker = new google.maps.Marker({
         map,
         position,
+        optimized: false,
+        zIndex: index,
         icon: { url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png` },
         title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
       });
       markers.push(marker);
 
-      // sekcja „Dodaj do kalendarza” tylko dla przyszłych
+      // 7. Sekcja „Dodaj do kalendarza” tylko dla przyszłych wydarzeń
       let calendarSection = "";
       if (start > now) {
         const startF = formatDateForCalendar(event["Data od"]);
@@ -258,6 +262,7 @@ function displayEvents(startDate, endDate) {
           </p>`;
       }
 
+      // 8. Pełna zawartość okienka InfoWindow
       const infoContent = `
         <div style="font-family:'Arial Black', sans-serif;">
           <h3>${event.Nazwa}</h3>
@@ -287,12 +292,14 @@ function displayEvents(startDate, endDate) {
         content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`
       });
 
-      marker.addListener("click",   () => infowindow.open(map, marker));
-      // marker.addListener("mouseover",() => tooltip.open(map, marker));
-      // marker.addListener("mouseout", () => tooltip.close());
+      // 9. Nasłuchiwacze na marker
+      marker.addListener("click",     () => infowindow.open(map, marker));
+      // marker.addListener("mouseover", () => tooltip.open(map, marker));
+      // marker.addListener("mouseout",  () => tooltip.close());
     });
   });
 }
+
 
 window.initMap = loadData;
 </script>
