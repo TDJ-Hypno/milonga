@@ -60,7 +60,7 @@
 <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
   <button id="themeToggle" class="custom-button">Tryb nocny</button>
   <button onclick="openFilterModal()" class="custom-button">Filtruj</button>
-  <div id="selectedFilter">Wybrano: wszystkie</div>
+  <div id="selectedFilter">Pokaż: wszystkie</div>
 </div>
 
 <!-- Modal filtrów -->
@@ -156,11 +156,11 @@ function applyFilter() {
   }
 
   switch(filter) {
-    case "today": from = new Date(now); from.setHours(0,0,0,0); to = new Date(now); to.setHours(23,59,59,999); label = "Wybrano: dzisiaj"; break;
-    case "week": from = startOfWeek(now); to = endOfWeek(now); label = "Wybrano: ten tydzień"; break;
-    case "weekend": from = startOfWeek(now); from.setDate(from.getDate() + 4); to = new Date(from); to.setDate(to.getDate() + 2); label = "Wybrano: ten weekend"; break;
-    case "nextweek": from = startOfWeek(now); from.setDate(from.getDate() + 7); to = endOfWeek(from); label = "Wybrano: następny tydzień"; break;
-    case "nextweekend": from = startOfWeek(now); from.setDate(from.getDate() + 11); to = new Date(from); to.setDate(to.getDate() + 2); label = "Wybrano: następny weekend"; break;
+    case "today": from = new Date(now); from.setHours(0,0,0,0); to = new Date(now); to.setHours(23,59,59,999); label = "Pokaż: dzisiaj"; break;
+    case "week": from = startOfWeek(now); to = endOfWeek(now); label = "Pokaż: ten tydzień"; break;
+    case "weekend": from = startOfWeek(now); from.setDate(from.getDate() + 4); to = new Date(from); to.setDate(to.getDate() + 2); label = "Pokaż: ten weekend"; break;
+    case "nextweek": from = startOfWeek(now); from.setDate(from.getDate() + 7); to = endOfWeek(from); label = "Pokaż: następny tydzień"; break;
+    case "nextweekend": from = startOfWeek(now); from.setDate(from.getDate() + 11); to = new Date(from); to.setDate(to.getDate() + 2); label = "Pokaż: następny weekend"; break;
     case "range":
       const d1 = document.getElementById("dateFrom").value;
       const d2 = document.getElementById("dateTo").value;
@@ -170,10 +170,10 @@ function applyFilter() {
       }
       from = new Date(d1); from.setHours(0,0,0,0);
       to = new Date(d2); to.setHours(23,59,59,999);
-      label = `Wybrano zakres od ${d1} do ${d2}`;
+      label = `Pokaż zakres od ${d1} do ${d2}`;
       break;
     default:
-      label = "Wybrano: wszystkie";
+      label = "Pokaż: wszystkie";
   }
 
   document.getElementById("selectedFilter").textContent = label;
