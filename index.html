@@ -5,20 +5,13 @@
   <title>Mapa milong</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
-    #map {
-      height: 100%;
-      width: 100%;
-    }
+    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+    #map { height: 100%; width: 100%; }
     .info-panel {
       position: absolute;
       top: 10px;
       right: 10px;
-      background: lightgray;
+      background: white;
       padding: 8px 12px;
       border-radius: 8px;
       font-family: 'Arial Black', sans-serif;
@@ -29,11 +22,10 @@
       position: absolute;
       bottom: 10px;
       left: 10px;
-      background: lightgray;
+      background: white;
       padding: 10px;
       border-radius: 8px;
       font-size: 12px;
-      font-family: 'Arial Black', sans-serif;
       display: flex;
       gap: 15px;
       align-items: center;
@@ -41,17 +33,6 @@
     .legend-icon {
       width: 16px;
       height: 16px;
-    }
-    #filterModal, select, input[type="date"] {
-      background: lightgray;
-      font-family: Arial, sans-serif;
-    }
-    .gm-style-iw-t {
-      display: none !important;
-    }
-    .gm-style .gm-style-iw-c {
-      background: lightgray;
-      font-family: 'Arial Black', sans-serif;
     }
   </style>
 </head>
@@ -62,8 +43,9 @@
   <div id="selectedFilter" style="margin-left: 10px; font-weight: bold;"></div>
 </div>
 
+<!-- Modal filtrów -->
 <div id="filterModal" style="display:none; position:fixed;top:50px;left:50%;transform:translateX(-50%);
-     background:lightgray;padding:20px;border:1px solid #ccc;z-index:1000;border-radius:8px;">
+     background:white;padding:20px;border:1px solid #ccc;z-index:1000;border-radius:8px;">
   <h3>Pokaż wydarzenia</h3>
   <select id="filterSelect" onchange="toggleDateInputs()">
     <option value="all">wszystkie</option>
@@ -82,13 +64,13 @@
 </div>
 
 <div id="map"></div>
-<div class="info-panel">TDj "Hypno" Piotr Smoleń</div>
+<div class="info-panel">Opracowane przez: TDj "Hypno" Piotr Smoleń</div>
 <div class="legend">
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> Pozostałe</div>
-  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Minione</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png"> dzisiaj</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png"> jutro</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> pojutrze</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> pozostałe</div>
+  <div><img class="legend-icon" src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> minione</div>
 </div>
 
 <script>
@@ -142,17 +124,6 @@ function formatDateForCalendar(dateStr) {
   return dt.toISOString().replace(/-|:|\.\d\d\d/g,"");
 }
 
-function formatTooltip(startStr, endStr) {
-  const start = new Date(startStr);
-  const end = new Date(endStr);
-  const sDate = start.toLocaleDateString();
-  const sTime = start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const eTime = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  return (sDate === end.toLocaleDateString())
-    ? `${sDate} ${sTime}–${eTime}`
-    : `${startStr} – ${endStr}`;
-}
-
 function displayEvents(startDate, endDate) {
   const now = new Date();
   markers.forEach(marker => marker.setMap(null));
@@ -160,13 +131,10 @@ function displayEvents(startDate, endDate) {
 
   const geocoder = new google.maps.Geocoder();
   eventsData.slice().reverse().forEach((event) => {
-    const start = new Date(event["Data od"]);
-    const end = new Date(event["Data do"]);
-    if (start > endDate || end < startDate) return;
-
     geocoder.geocode({ address: event.Adres }, (results, status) => {
       if (status === "OK") {
         const position = results[0].geometry.location;
+        const start = new Date(event["Data od"]);
         const today = new Date(now); today.setHours(0,0,0,0);
         const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
         let color = "blue";
@@ -181,7 +149,7 @@ function displayEvents(startDate, endDate) {
           icon: {
             url: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`,
           },
-          title: `${event.Nazwa}`
+          title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
         });
 
         markers.push(marker);
@@ -200,15 +168,14 @@ function displayEvents(startDate, endDate) {
             <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
             <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
                <button>Wyznacz trasę do tego miejsca</button></a></p>
-            ${start > new Date() ? `<p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "
-" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
+            ${new Date(event["Data od"]) > new Date() ? `<p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "\n" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
                <button>Dodaj do mojego kalendarza</button></a></p>` : ""}
           </div>
         `;
 
         const infowindow = new google.maps.InfoWindow({ content: infoContent });
         const tooltip = new google.maps.InfoWindow({
-          content: formatTooltip(event["Data od"], event["Data do"]),
+          content: `<strong>${event.Nazwa}</strong><br>${event["Data od"]} – ${event["Data do"]}`,
         });
 
         marker.addListener("click", () => infowindow.open(map, marker));
@@ -291,10 +258,6 @@ function applyFilter() {
 
 window.initMap = loadData;
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap">
-function initMap() {
-  loadData();
-}
-</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
 </html>
