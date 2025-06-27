@@ -8,6 +8,15 @@
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100%; width: 100%; }
 
+    #selectedFilter {
+      background-color: lightgray;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 11px;
+      display: inline-block;
+    }
+    
     .custom-button {
       background-color: lightgray;
       border-radius: 8px;
@@ -91,6 +100,7 @@ let eventsData = [];
 let nightMode = false;
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("selectedFilter").textContent = "Wybrano: wszystkie";
   document.getElementById("themeToggle").addEventListener("click", () => {
     nightMode = !nightMode;
     document.getElementById("themeToggle").textContent = nightMode ? "Tryb dzienny" : "Tryb nocny";
