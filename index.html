@@ -83,7 +83,7 @@
 </div>
 
 <div id="map"></div>
-<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.08)</div>
+<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.081)</div>
 <div class="legend">
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
   <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -195,6 +195,7 @@ function displayEvents(startDate, endDate) {
     geocoder.geocode({ address: event.Adres }, (results, status) => {
       if (status === "OK") {
         const position = results[0].geometry.location;
+        const today = new Date(now); today.setHours(0,0,0,0);
         const dayDiff = Math.floor((start - new Date()) / (1000 * 60 * 60 * 24));
         let color = "blue";
         if (dayDiff === 0) color = "red";
