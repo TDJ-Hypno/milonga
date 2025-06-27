@@ -24,7 +24,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.093)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.094)</div>
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
@@ -107,6 +107,10 @@
       document.getElementById('filterModal').style.display = 'none';
       const now = new Date(), from = new Date(now), to = new Date(now);
       switch(f) {
+        case 'all':
+          from = new Date(2000,1,1);
+          to = new Date(3000,1,1);
+          break;
         case 'today': from.setHours(0,0,0,0); to.setHours(23,59,59,999); break;
         case 'next3days': from.setHours(0,0,0,0); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break;
         case 'week':     { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+1); from.setTime(d); to.setTime(d); to.setDate(to.getDate()+6); } break;
