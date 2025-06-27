@@ -7,29 +7,10 @@
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100%; width: 100%; }
-
-    #selectedFilter {
-      background-color: lightgray;
-      border-radius: 8px;
-      padding: 4px 8px;
-      font-family: 'Arial', sans-serif;
-      font-size: 10px;
-      display: inline-block;
-    }
-
-    .custom-button {
-      background-color: lightgray;
-      border-radius: 8px;
-      padding: 6px 10px;
-      border: 2px solid #888;
-      font-family: 'Arial Black', sans-serif;
-      cursor: pointer;
-    }
-
     .info-panel {
       position: absolute;
       top: 10px;
-      right: 60px;
+      right: 150px;
       background: lightgray;
       padding: 8px 12px;
       border-radius: 8px;
@@ -44,8 +25,8 @@
       background: lightgray;
       padding: 10px;
       border-radius: 8px;
-      font-family: 'Arial Black', sans-serif;
       font-size: 12px;
+      font-family: 'Arial Black', sans-serif;
       display: flex;
       gap: 15px;
       align-items: center;
@@ -54,230 +35,220 @@
       width: 16px;
       height: 16px;
     }
+    .top-controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .top-controls button {
+      padding: 6px 10px;
+      background-color: lightgray;
+      border: 2px solid black;
+      border-radius: 8px;
+      font-family: 'Arial Black', sans-serif;
+      cursor: pointer;
+    }
+    #selectedFilterText {
+      font-family: 'Arial Black', sans-serif;
+      font-size: 11px;
+      margin-left: 10px;
+      background-color: lightgray;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
-<div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
-  <button id="themeToggle" class="custom-button">Tryb nocny</button>
-  <button onclick="openFilterModal()" class="custom-button">Filtruj</button>
-  <div id="selectedFilter">Pokaż: wszystkie</div>
-</div>
-
-<!-- Modal filtrów -->
-<div id="filterModal" style="display:none; position:fixed;top:50px;left:50%;transform:translateX(-50%);background:lightgray;padding:20px;border:1px solid #ccc;z-index:1000;border-radius:8px;">
-  <h3>Pokaż wydarzenia</h3>
-  <select id="filterSelect" onchange="toggleDateInputs()">
-    <option value="all">wszystkie</option>
-    <option value="today">dzisiaj</option>
-    <option value="week">ten tydzień</option>
-    <option value="weekend">ten weekend</option>
-    <option value="nextweek">następny tydzień</option>
-    <option value="nextweekend">następny weekend</option>
-    <option value="range">w zakresie</option>
-  </select><br><br>
-  <div id="dateInputs" style="display:none;">
-    <label>Od: <input type="date" id="dateFrom"></label><br><br>
-    <label>Do: <input type="date" id="dateTo"></label><br><br>
+  <div class="top-controls">
+    <button id="themeToggle">Tryb nocny</button>
+    <button onclick="openFilterModal()">Filtruj</button>
+    <div id="selectedFilterText">Wybrano: wszystkie</div>
   </div>
-  <button onclick="applyFilter()">Filtruj</button>
-</div>
 
-<div id="map"></div>
-<div class="info-panel">TDj "Hypno" Piotr Smoleń (0.09)</div>
-<div class="legend">
-  <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
-  <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
-  <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
-  <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/green-dot.png"> Kolejne</div>
-  <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Zakończone</div>
-</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń</div>
 
-<script>
-let map;
-let markers = [];
-let eventsData = [];
-let nightMode = false;
+  <div class="legend">
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/green-dot.png"> Pozostałe</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Zakończone</div>
+  </div>
 
-function loadData() {
-  fetch("https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1")
-    .then(res => res.json())
-    .then(data => {
-      eventsData = data;
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const center = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          };
-          map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 10,
-            center: center
-          });
-          displayEvents(new Date(2000, 1, 1), new Date(3000, 1, 1));
-        },
-        () => {
-          map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 6,
-            center: { lat: 52.1, lng: 19.4 }
-          });
-          displayEvents(new Date(2000, 1, 1), new Date(3000, 1, 1));
-        }
-      );
-    });
-}
+  <div id="map"></div>
 
-function openFilterModal() {
-  document.getElementById("filterModal").style.display = "block";
-}
+  <div id="filterModal" style="display:none; position:fixed; top:100px; left:50%; transform:translateX(-50%); background:lightgray; padding:20px; border-radius:10px; z-index:1000;">
+    <h3>Pokaż wydarzenia</h3>
+    <select id="filterSelect" onchange="toggleDateInputs()">
+      <option value="all">wszystkie</option>
+      <option value="today">dzisiaj</option>
+      <option value="week">ten tydzień</option>
+      <option value="weekend">ten weekend</option>
+      <option value="nextweek">następny tydzień</option>
+      <option value="nextweekend">następny weekend</option>
+      <option value="past">zakończone</option>
+      <option value="range">w zakresie</option>
+    </select><br><br>
+    <div id="dateInputs" style="display:none;">
+      <label>Od: <input type="date" id="dateFrom"></label><br><br>
+      <label>Do: <input type="date" id="dateTo"></label><br><br>
+    </div>
+    <button onclick="applyFilter()">Filtruj</button>
+  </div>
 
-function toggleDateInputs() {
-  const value = document.getElementById("filterSelect").value;
-  document.getElementById("dateInputs").style.display = value === "range" ? "block" : "none";
-}
+  <script>
+    let map;
+    let markers = [];
+    let eventsData = [];
+    let nightMode = false;
 
-function applyFilter() {
-  const filter = document.getElementById("filterSelect").value;
-  const now = new Date();
-  let from = new Date(2000, 1, 1);
-  let to = new Date(3000, 1, 1);
-  let label = "";
-
-  function startOfWeek(date) {
-    const d = new Date(date);
-    d.setDate(d.getDate() - d.getDay() + 1);
-    d.setHours(0,0,0,0);
-    return d;
-  }
-  function endOfWeek(date) {
-    const d = startOfWeek(date);
-    d.setDate(d.getDate() + 6);
-    d.setHours(23,59,59,999);
-    return d;
-  }
-
-  switch(filter) {
-    case "today": from = new Date(now); from.setHours(0,0,0,0); to = new Date(now); to.setHours(23,59,59,999); label = "Pokaż: dzisiaj"; break;
-    case "week": from = startOfWeek(now); to = endOfWeek(now); label = "Pokaż: ten tydzień"; break;
-    case "weekend": from = startOfWeek(now); from.setDate(from.getDate() + 4); to = new Date(from); to.setDate(to.getDate() + 2); label = "Pokaż: ten weekend"; break;
-    case "nextweek": from = startOfWeek(now); from.setDate(from.getDate() + 7); to = endOfWeek(from); label = "Pokaż: następny tydzień"; break;
-    case "nextweekend": from = startOfWeek(now); from.setDate(from.getDate() + 11); to = new Date(from); to.setDate(to.getDate() + 2); label = "Pokaż: następny weekend"; break;
-    case "range":
-      const d1 = document.getElementById("dateFrom").value;
-      const d2 = document.getElementById("dateTo").value;
-      if (!d1 || !d2 || new Date(d2) < new Date(d1)) {
-        alert("Nieprawidłowy zakres dat.");
-        return;
-      }
-      from = new Date(d1); from.setHours(0,0,0,0);
-      to = new Date(d2); to.setHours(23,59,59,999);
-      label = `Pokaż zakres od ${d1} do ${d2}`;
-      break;
-    default:
-      label = "Pokaż: wszystkie";
-  }
-
-  document.getElementById("selectedFilter").textContent = label;
-  document.getElementById("filterModal").style.display = "none";
-  displayEvents(from, to);
-}
-
-function displayEvents(startDate, endDate) {
-  markers.forEach(marker => marker.setMap(null));
-  markers = [];
-
-  const geocoder = new google.maps.Geocoder();
-  eventsData.slice().reverse().forEach((event) => {
-    const start = new Date(event["Data od"]);
-    const end = new Date(event["Data do"]);
-    if (start > endDate || end < startDate) return; // <-- filtruj poprawnie!
-
-    geocoder.geocode({ address: event.Adres }, (results, status) => {
-      if (status === "OK") {
-        const position = results[0].geometry.location;
-        const dayDiff = Math.floor((start - new Date()) / (1000 * 60 * 60 * 24));
-        let color = "blue";
-        if (dayDiff === 0) color = "red";
-        else if (dayDiff === 1) color = "orange";
-        else if (dayDiff === 2) color = "yellow";
-        else if (dayDiff > 2) color = "green";
-
-        const marker = new google.maps.Marker({
-          map,
-          position,
-          icon: {
-            url: `https://maps.google.com/mapfiles/ms/icons/${color}
-        markers.push(marker);
-
-        const infoContent = `
-          <div style="font-family:'Arial Black', sans-serif; background:lightgray; padding:10px; border-radius:8px;">
-            <h3>${event.Nazwa}</h3>
-            <p><strong>Adres:</strong> ${event.Adres}</p>
-            <p><strong>Od:</strong> ${event["Data od"]}</p>
-            <p><strong>Do:</strong> ${event["Data do"]}</p>
-            <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
-            <p><strong>Organizator:</strong> ${event.Organizator}</p>
-            <p><strong>TDJ:</strong> ${event.TDJ}</p>
-            <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
-            <p><strong>Info:</strong> ${event.Informacje}</p>
-            <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
-            <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
-              <button>Wyznacz trasę do tego miejsca</button></a></p>
-            ${start > new Date() ? `
-              <p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "\n" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
-              <button>Dodaj do mojego kalendarza</button></a></p>` : ""}
-          </div>`;
-
-        const infowindow = new google.maps.InfoWindow({ content: infoContent });
-
-        const sameDay = event["Data od"].slice(0, 10) === event["Data do"].slice(0, 10);
-        const timeStart = new Date(event["Data od"]).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
-        const timeEnd = new Date(event["Data do"]).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
-        const tooltipText = sameDay
-          ? `${event["Data od"].slice(0, 10)} ${timeStart}–${timeEnd}`
-          : `${event["Data od"]} – ${event["Data do"]}`;
-
-        const tooltip = new google.maps.InfoWindow({
-          content: `<div style="font-family:'Arial Black'; background:lightgray; font-size:11px;">${event.Nazwa}<br>${tooltipText}</div>`,
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("themeToggle").addEventListener("click", () => {
+        nightMode = !nightMode;
+        document.getElementById("themeToggle").textContent = nightMode ? "Tryb dzienny" : "Tryb nocny";
+        map.setOptions({
+          styles: nightMode ? [{ elementType: 'geometry', stylers: [{ color: '#242f3e' }] }] : null
         });
-
-        marker.addListener("click", () => infowindow.open(map, marker));
-        marker.addListener("mouseover", () => tooltip.open(map, marker));
-        marker.addListener("mouseout", () => tooltip.close());
--dot.png`,
-          },
-          title: `${event.Nazwa}\n${event["Data od"]} – ${event["Data do"]}`
-        });
-
-        markers.push(marker);
-
-        const infoContent = `
-          <div style="font-family:'Arial Black', sans-serif;">
-            <h3>${event.Nazwa}</h3>
-            <p><strong>Adres:</strong> ${event.Adres}</p>
-            <p><strong>Od:</strong> ${event["Data od"]}</p>
-            <p><strong>Do:</strong> ${event["Data do"]}</p>
-            <p><strong>Parkietowe:</strong> ${event.Parkietowe}</p>
-            <p><strong>Organizator:</strong> ${event.Organizator}</p>
-            <p><strong>TDJ:</strong> ${event.TDJ}</p>
-            <p><strong>Typ muzyki:</strong> ${event["Typ muzyki"]}</p>
-            <p><strong>Info:</strong> ${event.Informacje}</p>
-            <p><a href="${event.Link}" target="_blank">Link do wydarzenia</a></p>
-            <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.Adres)}" target="_blank">
-               <button>Wyznacz trasę do tego miejsca</button></a></p>
-            ${new Date(event["Data od"]) > new Date() ? `<p><a href='https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.Nazwa)}&dates=${formatDateForCalendar(event["Data od"])}/${formatDateForCalendar(event["Data do"])}&details=${encodeURIComponent(event.Informacje + "\n" + event.Link)}&location=${encodeURIComponent(event.Adres)}' target='_blank'>
-               <button>Dodaj do mojego kalendarza</button></a></p>` : ""}
-          </div>
-        `;
-
-        const infowindow = new google.maps.InfoWindow({ content: infoContent });
-        marker.addListener("click", () => infowindow.open(map, marker));
-      }
+      });
     });
-  });
-}
 
-window.initMap = loadData;
-</script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
+    function initMap() {
+      fetch("https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1")
+        .then(res => res.json())
+        .then(data => {
+          eventsData = data;
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 10,
+                center: { lat: pos.coords.latitude, lng: pos.coords.longitude }
+              });
+              applyFilter("all");
+            },
+            () => {
+              map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 6,
+                center: { lat: 52.1, lng: 19.4 }
+              });
+              applyFilter("all");
+            }
+          );
+        });
+    }
+
+    function openFilterModal() {
+      document.getElementById("filterModal").style.display = "block";
+    }
+
+    function toggleDateInputs() {
+      const value = document.getElementById("filterSelect").value;
+      document.getElementById("dateInputs").style.display = value === "range" ? "block" : "none";
+    }
+
+    function applyFilter(forcedValue = null) {
+      const filter = forcedValue || document.getElementById("filterSelect").value;
+      const now = new Date();
+      let from = new Date(2000, 1, 1);
+      let to = new Date(3000, 1, 1);
+      let label = "";
+
+      function startOfWeek(date) {
+        const d = new Date(date);
+        d.setDate(d.getDate() - d.getDay() + 1);
+        d.setHours(0,0,0,0);
+        return d;
+      }
+      function endOfWeek(date) {
+        const d = startOfWeek(date);
+        d.setDate(d.getDate() + 6);
+        d.setHours(23,59,59,999);
+        return d;
+      }
+
+      switch(filter) {
+        case "today":
+          from = new Date(); from.setHours(0,0,0,0);
+          to = new Date(); to.setHours(23,59,59,999);
+          label = "Wybrano: dzisiaj"; break;
+        case "week":
+          from = startOfWeek(now);
+          to = endOfWeek(now);
+          label = "Wybrano: ten tydzień"; break;
+        case "weekend":
+          from = startOfWeek(now); from.setDate(from.getDate() + 4);
+          to = new Date(from); to.setDate(to.getDate() + 2);
+          label = "Wybrano: ten weekend"; break;
+        case "nextweek":
+          from = startOfWeek(now); from.setDate(from.getDate() + 7);
+          to = endOfWeek(from);
+          label = "Wybrano: następny tydzień"; break;
+        case "nextweekend":
+          from = startOfWeek(now); from.setDate(from.getDate() + 11);
+          to = new Date(from); to.setDate(to.getDate() + 2);
+          label = "Wybrano: następny weekend"; break;
+        case "past":
+          to = new Date(); to.setHours(0,0,0,0);
+          from = new Date(2000, 0, 1);
+          label = "Wybrano: zakończone"; break;
+        case "range":
+          const d1 = document.getElementById("dateFrom").value;
+          const d2 = document.getElementById("dateTo").value;
+          if (!d1 || !d2 || new Date(d2) < new Date(d1)) {
+            alert("Nieprawidłowy zakres dat.");
+            return;
+          }
+          from = new Date(d1); from.setHours(0,0,0,0);
+          to = new Date(d2); to.setHours(23,59,59,999);
+          label = `Wybrano zakres od ${d1} do ${d2}`; break;
+        default:
+          label = "Wybrano: wszystkie";
+      }
+
+      document.getElementById("selectedFilterText").textContent = label;
+      document.getElementById("filterModal").style.display = "none";
+
+      markers.forEach(m => m.setMap(null));
+      markers = [];
+
+      eventsData.forEach(event => {
+        const start = new Date(event["Data od"]);
+        const end = new Date(event["Data do"]);
+        if (start > to || end < from) return;
+
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: event.Adres }, (results, status) => {
+          if (status === "OK") {
+            const pos = results[0].geometry.location;
+            const today = new Date(); today.setHours(0,0,0,0);
+            const dayDiff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
+            let color = "blue";
+            if (dayDiff === 0) color = "red";
+            else if (dayDiff === 1) color = "orange";
+            else if (dayDiff === 2) color = "yellow";
+            else if (dayDiff > 2) color = "green";
+
+            const marker = new google.maps.Marker({
+              map, position: pos,
+              icon: `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`
+            });
+
+            const info = new google.maps.InfoWindow({
+              content: `<div style="background:lightgray; font-family:Arial Black; padding:10px;"><b>${event.Nazwa}</b><br>${event["Data od"]}<br>${event["Data do"]}</div>`
+            });
+
+            marker.addListener("click", () => info.open(map, marker));
+            markers.push(marker);
+          }
+        });
+      });
+    }
+
+    window.initMap = initMap;
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
 </html>
