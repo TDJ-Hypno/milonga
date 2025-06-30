@@ -24,7 +24,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.101)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.100)</div>
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
@@ -91,7 +91,6 @@
     function toggleDateInputs() { document.getElementById('dateInputs').style.display = document.getElementById('filterSelect').value === 'range' ? 'block' : 'none'; }
 
     function applyFilter() {
-      localStorage.setItem("lastSelectedFilter", filter);
       fetch('https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1')
         .then(res => res.json())
         .then(data => {
@@ -159,15 +158,6 @@
       yes.addEventListener('click',e=>{e.stopPropagation();tip.style.display='none';window.open('https://m.me/tdj.hypno.piotr.smolen','_blank');});
       no.addEventListener('click', e=>{e.stopPropagation();tip.style.display='none';});
       document.addEventListener('click', e=>{if(!panel.contains(e.target)&&!tip.contains(e.target))tip.style.display='none';});
-
-      const savedFilter = localStorage.getItem("lastSelectedFilter");
-      if (savedFilter) {
-        document.getElementById("filterSelect").value = savedFilter;
-        applyFilter(); // zastosuj zapisany filtr
-      } else {
-        document.getElementById("filterSelect").value = "all";
-        applyFilter(); // domyślny wybór jeśli brak zapisanego
-      }
     });
 
     window.initMap = initMap;
