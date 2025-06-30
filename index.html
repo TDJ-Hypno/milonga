@@ -24,21 +24,12 @@
   </div>
 
   <div id="map"></div>
-  
-<div style="position: absolute; bottom: 55px; left: 10px; display: flex; gap: 8px;">
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.101)</div>
-  <div class="info-panel" id="mailPanel" title="Wyślij email">
-    ✉️
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.100)</div>
+  <div id="contactTooltip">
+    <p>Napiszesz do mnie?</p>
+    <button id="contactYes">Tak</button>
+    <button id="contactNo">Nie</button>
   </div>
-</div>
-
-  
-<div id="contactTooltip">
-  <p>Czy chcesz wysłać email z informacją o nowej milondze?</p>
-  <button id="contactYes">Tak</button>
-  <button id="contactNo">Nie</button>
-</div>
-
   <div class="legend">
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -158,39 +149,7 @@
       });
     }
 
-    
-document.addEventListener('DOMContentLoaded', () => {
-  const panel = document.querySelector('.info-panel');
-  const mailPanel = document.getElementById('mailPanel');
-  const tip = document.getElementById('contactTooltip');
-  const yes = document.getElementById('contactYes');
-  const no = document.getElementById('contactNo');
-
-  panel.addEventListener('click', () => {
-    tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
-  });
-
-  mailPanel.addEventListener('click', () => {
-    tip.style.display = 'block';
-  });
-
-  yes.addEventListener('click', e => {
-    e.stopPropagation();
-    tip.style.display = 'none';
-    window.location.href = "mailto:tdj.hypno.piotr.smolen@gmail.com?subject=Nowa milonga&body=Witam,%0D%0A%0D%0AChciałbym dodać informację o nowej milondze...";
-  });
-
-  no.addEventListener('click', e => {
-    e.stopPropagation();
-    tip.style.display = 'none';
-  });
-
-  document.addEventListener('click', e => {
-    if (!panel.contains(e.target) && !mailPanel.contains(e.target) && !tip.contains(e.target)) {
-      tip.style.display = 'none';
-    }
-  });
-
+    document.addEventListener('DOMContentLoaded',()=>{
       const panel=document.querySelector('.info-panel');
       const tip=document.getElementById('contactTooltip');
       const yes=document.getElementById('contactYes');
