@@ -46,7 +46,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.107)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.106)</div>
   <div class="info-panel" id="emailPanel" style="left: 220px;">
   <img class="legend-icon"
          src="koperta.svg"
@@ -181,25 +181,7 @@
         geocoder.geocode({address:ev.Adres},(res,st)=>{ if(st!=='OK') return;
           const pos=res[0].geometry.location;
           const diff=Math.floor((s-today)/(1000*60*60*24));
-
-          let col;
-           // jeśli dziś jest pomiędzy datą startu i końca → czerwony
-           if (s <= today && e >= today) {
-             col = 'red';
-           } else if (diff === 0) {
-             col = 'red';
-           } else if (diff === 1) {
-             col = 'orange';
-           } else if (diff === 2) {
-            col = 'yellow';
-           } else if (diff > 2) {
-             col = 'green';
-          } else {
-            col = 'blue';
-          }
-          const marker = new google.maps.Marker({ … });
-
-                                                       
+          let col='blue'; if(diff===0)col='red';else if(diff===1)col='orange';else if(diff===2)col='yellow';else if(diff>2)col='green';
           const marker=new google.maps.Marker({map,position:pos,optimized:false,zIndex:i,icon:{url:`https://maps.google.com/mapfiles/ms/icons/${col}-dot.png`},title:`${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`});
           markers.push(marker);
           const cs = s>now?`<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje+'\n'+ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`:'';
