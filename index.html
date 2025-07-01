@@ -219,12 +219,27 @@
   };
   
   // oba przyciski chowają tooltip
-  ['emailYes','emailNo'].forEach(id => {
-    document.getElementById(id).onclick = e => {
-      e.stopPropagation();
-      document.getElementById('emailTooltip').style.display = 'none';
-    };
-  });
+  //['emailYes','emailNo'].forEach(id => {
+  //  document.getElementById(id).onclick = e => {
+  //    e.stopPropagation();
+  //    document.getElementById('emailTooltip').style.display = 'none';
+  //  };
+  //});
+
+  // klik "Tak": zamknij tooltip i otwórz klienta pocztowego
+  document.getElementById('emailYes').onclick = e => {
+    e.stopPropagation();
+    document.getElementById('emailTooltip').style.display = 'none';
+    // niżej ustaw temat i treść, jeśli chcesz
+    window.location.href = 
+      'mailto:?subject=Nowe wydarzenie tangowe&body=Chciałbym Cię poinformować o nowym wydarzeniu tangowym.';
+  };
+  
+  // klik "Nie": tylko zamknij tooltip
+  document.getElementById('emailNo').onclick = e => {
+    e.stopPropagation();
+    document.getElementById('emailTooltip').style.display = 'none';
+  };
   
   // klik gdziekolwiek indziej – też zamknie
   document.onclick = () => {
