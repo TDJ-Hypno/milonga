@@ -24,17 +24,36 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.104)</div>
-  <div class="info-panel" style="left: 220px;">
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.105)</div>
+  <div id="mailPanel" class="info-panel" style="left: 220px;">
   <img class="legend-icon"
-         src="koperta.svg"
-         //alt="koperta">
+       src="koperta.svg"
+       alt="koperta">
   </div>
+  
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
     <button id="contactNo">Nie</button>
   </div>
+
+  <div id="mailTooltip" style="
+     display: none;
+     position: absolute;
+     bottom: 85px;
+     left: 220px;
+     background: lightgray;
+     padding: 8px 12px;
+     border-radius: 8px;
+     font-family: 'Arial Black', sans-serif;
+     font-size: 10px;
+     z-index: 6;
+   ">
+    <p>Wysyłamy email o nowym wydarzeniu?</p>
+    <button id="mailYes">Tak</button>
+    <button id="mailNo">Nie</button>
+  </div>
+  
   <div class="legend">
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -170,9 +189,73 @@
       const tip=document.getElementById('contactTooltip');
       const yes=document.getElementById('contactYes');
       const no=document.getElementById('contactNo');
+
+      const mailPanel = document.getElementById('mailPanel');
+      const mailTip   = document.getElementById('mailTooltip');
+      const mailYes   = document.getElementById('mailYes');
+      const mailNo    = document.getElementById('mailNo');
+      
       panel.addEventListener('click',()=>tip.style.display=tip.style.display==='block'?'none':'block');
       yes.addEventListener('click',e=>{e.stopPropagation();tip.style.display='none';window.open('https://m.me/tdj.hypno.piotr.smolen','_blank');});
       no.addEventListener('click', e=>{e.stopPropagation();tip.style.display='none';});
+
+        // otwieranie/ukrywanie mailTooltip
+      mailPanel.addEventListener('click', () => {
+        mailTip.style.display = mailTip.style.display === 'block' ? 'none' : 'block';
+      });
+    
+      // „Tak” → wyślij maila
+      mailYes.addEventListener('click', e => {
+        e.stopPropagation();
+        mailTip.style.display = 'none';
+        window.location.href =
+          'mailto:hypno@poczta.onet.pl'
+          + '?subject=' + encodeURIComponent('Pinezka tangowa')
+          + '&body='    + encodeURIComponent('Proszę o dodanie pinezki tangowej.');
+      });
+    
+      // „Nie” → zamknij tooltip
+      mailNo.addEventListener('click', e => {
+        e.stopPropagation();
+        mailTip.style.display = 'none';
+      });
+
+      // 1. Pobierz elementy
+      const mailPanel = document.getElementById('mailPanel');
+      const mailTip   = document.getElementById('mailTooltip');
+      const mailYes   = document.getElementById('mailYes');
+      const mailNo    = document.getElementById('mailNo');
+      
+      // 2. Klik w kopertę → pokaż/ukryj tooltip
+      mailPanel.addEventListener('click', () => {
+        mailTip.style.display =
+          mailTip.style.display === 'block' ? 'none' : 'block';
+      });
+      
+      // 3. Tak → zamknij tooltip i uruchom mailto
+      mailYes.addEventListener('click', e => {
+        e.stopPropagation();
+        mailTip.style.display = 'none';
+        window.location.href =
+          'mailto:hypno@poczta.onet.pl'
+          + '?subject=' + encodeURIComponent('Pinezka tangowa')
+          + '&body='    + encodeURIComponent('Proszę o dodanie pinezki tangowej.');
+      });
+      
+      // 4. Nie → tylko zamknij tooltip
+      mailNo.addEventListener('click', e => {
+        e.stopPropagation();
+        mailTip.style.display = 'none';
+      });
+      
+      // 5. Klik poza → ukryj tooltip mailowy
+      document.addEventListener('click', e => {
+        if (!mailPanel.contains(e.target) && !mailTip.contains(e.target)) {
+          mailTip.style.display = 'none';
+        }
+      });
+
+      
       document.addEventListener('click', e=>{if(!panel.contains(e.target)&&!tip.contains(e.target))tip.style.display='none';});
     });
 
