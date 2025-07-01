@@ -18,12 +18,13 @@
 </head>
 <body>
   <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
+    
     <button onclick="openFilterModal()" class="custom-button">Filtruj</button>
     <div id="selectedFilter">Wybrano: najbliższe 3 dni</div>
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.101)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.100)</div>
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
@@ -58,23 +59,11 @@
     <button onclick="applyFilter()">Filtruj</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/overlapping-marker-spiderfier@0.3.3/lib/oms.min.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
   <script>
-    let map, oms, markers = [], eventsData = [], nightMode = false;
+    let map, markers = [], eventsData = [], nightMode = false;
 
     function initMap() {
       map = new google.maps.Map(document.getElementById('map'), { zoom: 10, center: { lat: 52.1, lng: 19.4 } });
-      oms = new OverlappingMarkerSpiderfier(map, {
-        markersWontMove: true,
-        markersWontHide: true,
-        basicFormatEvents: true
-      });
-      oms.addListener('click', function(marker) {
-        const info = marker.get('infoContent');
-        const iw = new google.maps.InfoWindow({ content: info });
-        iw.open(map, marker);
-      });
       loadData();
     }
 
@@ -82,6 +71,7 @@
       fetch('https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1')
         .then(res => res.json())
         .then(data => {
+          // uwzględnia tylko opłacone
           eventsData = data.filter(e => e['Opłacone'] === 'Tak');
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
@@ -104,7 +94,9 @@
       fetch('https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1')
         .then(res => res.json())
         .then(data => {
+          // uwzględnia tylko opłacone
           eventsData = data.filter(e => e['Opłacone'] === 'Tak');
+
           const f = document.getElementById('filterSelect').value;
           const labels = { all:'bieżące i przyszłe', today:'dzisiaj', next3days:'najbliższe 3 dni', week:'ten tydzień', weekend:'ten weekend', nextweek:'następny tydzień', nextweekend:'następny weekend', ended:'zakończone' };
           document.getElementById('selectedFilter').textContent = 'Wybrano: ' + (labels[f] || (f==='range'?`zakres od ${document.getElementById('dateFrom').value} do ${document.getElementById('dateTo').value}`:'wszystkie'));
@@ -113,7 +105,12 @@
           const now = new Date();
           let from = new Date(now), to = new Date(now);
           switch(f) {
-            case 'all': from.setHours(0,0,0,0); to = new Date(3000,1,1); break;
+            case 'all': 
+                from = new Date(); // dziś od teraz
+                from.setHours(0, 0, 0, 0);
+                to = new Date(3000, 1, 1); // daleka przyszłość
+                label = "Wybrano: bieżące i przyszłe";
+                break;
             case 'today': from.setHours(0,0,0,0); to.setHours(23,59,59,999); break;
             case 'next3days': from.setHours(0,0,0,0); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break;
             case 'week': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+1); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+6); to.setHours(23,59,59,999); break; }
@@ -129,43 +126,42 @@
 
     function displayEvents(startDate, endDate) {
       const now = new Date(), today = new Date(now); today.setHours(0,0,0,0);
-      markers.forEach(m => m.setMap(null)); markers = [];
+      markers.forEach(m=>m.setMap(null)); markers=[];
       const geocoder = new google.maps.Geocoder();
       function fmtDate(s){ const d=new Date(s); return d.toISOString().replace(/-|:|\.\d{3}/g,''); }
-      const ended    = eventsData.filter(e => new Date(e['Data do']) < today) .sort((a,b) => new Date(a['Data od']) - new Date(b['Data od']));
-      const future   = eventsData.filter(e => new Date(e['Data do']) >=today).sort((a,b) => new Date(b['Data od']) - new Date(a['Data od']));
-      [...ended,...future].forEach((ev,i) => {
-        const s = new Date(ev['Data od']), e = new Date(ev['Data do']);
-        if (s> endDate || e< startDate) return;
-        geocoder.geocode({address:ev.Adres}, (res,st) => { if(st!=='OK') return;
-          const pos  = res[0].geometry.location;
-          const diff = Math.floor((s-today)/(1000*60*60*24));
-          let col = 'blue'; if(diff===0) col='red'; else if(diff===1) col='orange'; else if(diff===2) col='yellow'; else if(diff>2) col='green';
-          const marker = new google.maps.Marker({
-            position: pos,
-            optimized: false, zIndex: i,
-            icon: {url:`https://maps.google.com/mapfiles/ms/icons/${col}-dot.png`},
-            title:`${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`
-          });
+      const ended = eventsData.filter(e=>new Date(e['Data do'])<today).sort((a,b)=>new Date(a['Data od'])-new Date(b['Data od']));
+      const future=eventsData.filter(e=>new Date(e['Data do'])>=today).sort((a,b)=>new Date(b['Data od'])-new Date(a['Data od']));
+      [...ended,...future].forEach((ev,i)=>{
+        const s=new Date(ev['Data od']), e=new Date(ev['Data do']);
+        if(s> endDate||e< startDate) return;
+        geocoder.geocode({address:ev.Adres},(res,st)=>{ if(st!=='OK') return;
+          const pos=res[0].geometry.location;
+          const diff=Math.floor((s-today)/(1000*60*60*24));
+          let col='blue'; if(diff===0)col='red';else if(diff===1)col='orange';else if(diff===2)col='yellow';else if(diff>2)col='green';
+          const marker=new google.maps.Marker({map,position:pos,optimized:false,zIndex:i,icon:{url:`https://maps.google.com/mapfiles/ms/icons/${col}-dot.png`},title:`${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`});
           markers.push(marker);
-          const cs = s>now
-            ? `<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje+'\n'+ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`
-            : '';
-          const content = `<div style="font-family:'Arial Black',sans-serif;"><h3>${ev.Nazwa}</h3><p><strong>Adres:</strong>${ev.Adres}</p><p><strong>Od:</strong> ${ev['Data od']}</p><p><strong>Do:</strong> ${ev['Data do']}</p><p><strong>Parkietowe:</strong>${ev.Parkietowe}</p><p><strong>Organizator:</strong>${ev.Organizator}</p><p><strong>TDJ:</strong>${ev.TDJ}</p><p><strong>Typ muzyki:</strong>${ev['Typ muzyki']}</p><p><strong>Info:</strong>${ev.Informacje}</p><p><a href="${ev.Link}" target="_blank">Link</a></p><p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>${cs}</div>`;
-          marker.set('infoContent', content.replace(/undefined/g,'b.d.'));
-          oms.addMarker(marker);
+          const cs = s>now?`<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje+'\n'+ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`:'';
+          const content=`<div style="font-family:'Arial Black', sans-serif;"><h3>${ev.Nazwa}</h3><p><strong>Adres:</strong> ${ev.Adres}</p><p><strong>Od: </strong>${ev['Data od']}</p><p><strong>Do: </strong>${ev['Data do']}</p><p><strong>Parkietowe: </strong>${ev.Parkietowe}</p><p><strong>Organizator: </strong>${ev.Organizator}</p><p><strong>TDJ: </strong>${ev.TDJ}</p><p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p><p><strong>Info: </strong>${ev.Informacje}</p><p><a href="${ev.Link}" target="_blank">Link</a></p><p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>${cs}</div>`;
+          const cleaned = content.replace(/undefined/g, 'b.d.');
+          const iw = new google.maps.InfoWindow({ content: cleaned });
+          marker.addListener('click',()=>iw.open(map,marker));
         });
       });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const panel = document.querySelector('.info-panel');
-      const tip   = document.getElementById('contactTooltip');
-      panel.addEventListener('click', () => tip.style.display= tip.style.display==='block'?'none':'block');
-      document.getElementById('contactYes').onclick = e => { e.stopPropagation(); tip.style.display='none'; window.open('https://m.me/tdj.hypno.piotr.smolen','_blank'); };
-      document.getElementById('contactNo').onclick  = e => { e.stopPropagation(); tip.style.display='none'; };
-      document.addEventListener('click', e => { if (!panel.contains(e.target) && !tip.contains(e.target)) tip.style.display='none'; });
+    document.addEventListener('DOMContentLoaded',()=>{
+      const panel=document.querySelector('.info-panel');
+      const tip=document.getElementById('contactTooltip');
+      const yes=document.getElementById('contactYes');
+      const no=document.getElementById('contactNo');
+      panel.addEventListener('click',()=>tip.style.display=tip.style.display==='block'?'none':'block');
+      yes.addEventListener('click',e=>{e.stopPropagation();tip.style.display='none';window.open('https://m.me/tdj.hypno.piotr.smolen','_blank');});
+      no.addEventListener('click', e=>{e.stopPropagation();tip.style.display='none';});
+      document.addEventListener('click', e=>{if(!panel.contains(e.target)&&!tip.contains(e.target))tip.style.display='none';});
     });
+
+    window.initMap = initMap;
   </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
 </html>
