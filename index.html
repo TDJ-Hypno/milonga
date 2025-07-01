@@ -24,7 +24,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.100)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.101)</div>
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
@@ -60,10 +60,20 @@
   </div>
 
   <script>
-    let map, markers = [], eventsData = [], nightMode = false;
+    let map, oms, markers = [], eventsData = [], nightMode = false;
 
     function initMap() {
       map = new google.maps.Map(document.getElementById('map'), { zoom: 10, center: { lat: 52.1, lng: 19.4 } });
+      oms = new OverlappingMarkerSpiderfier(map, {
+        markersWontMove: true,
+        markersWontHide: true,
+        keepSpiderfied: true
+      });
+      const spiderInfo = new google.maps.InfoWindow();
+      oms.addListener('click', function(marker) {
+        spiderInfo.setContent(marker.customInfo);
+        spiderInfo.open(map, marker);
+      });
       loadData();
     }
 
@@ -144,7 +154,8 @@
           const content=`<div style="font-family:'Arial Black', sans-serif;"><h3>${ev.Nazwa}</h3><p><strong>Adres:</strong> ${ev.Adres}</p><p><strong>Od: </strong>${ev['Data od']}</p><p><strong>Do: </strong>${ev['Data do']}</p><p><strong>Parkietowe: </strong>${ev.Parkietowe}</p><p><strong>Organizator: </strong>${ev.Organizator}</p><p><strong>TDJ: </strong>${ev.TDJ}</p><p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p><p><strong>Info: </strong>${ev.Informacje}</p><p><a href="${ev.Link}" target="_blank">Link</a></p><p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>${cs}</div>`;
           const cleaned = content.replace(/undefined/g, 'b.d.');
           const iw = new google.maps.InfoWindow({ content: cleaned });
-          marker.addListener('click',()=>iw.open(map,marker));
+          marker.customInfo = cleaned;
+          oms.addMarker(marker);
         });
       });
     }
@@ -162,6 +173,7 @@
 
     window.initMap = initMap;
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
 </html>
