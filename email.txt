@@ -1,39 +1,12 @@
 Proszę dodać pinezkę tangową:
-1. Nazwa - (tu wpisz nazwę wydarzenia)
-2. Adres - (tu wpisz adres gdzie będzie odbywać się wydarzenie, najlepiej pobierz go z Google maps)
-3. Data od - (tu wpisz datę i godzinę rozpoczęcia w formacie RRRR.MM.DD GG:MM:SS np. 2025-09-09 20:00:00)
-4. Data do - (tu wpisz datę i godzinę zakończenia w formacie RRRR.MM.DD GG:MM:SS np. 2025-09-09 23:45:00)
-5. Parkietowe - (tu podaj wysokość parkietowego np. 50zł/10Euro)
-6. Organizator - (tu wpisz nazwę organizatora)
-7. TDJ - (tu wpisz kto jest TDJ ale bez tego TDJ np. Zdzisław Bejzik (Polska))
-8. Typ muzyki - (tu wpisz typ muzyki np. Klasyczna lub Klasyka+Nuevo)
-9. Link - (tu wklej z przeglądarki link do strony z wydarzeniem np. z Facebook)
-10. Info - (tu podaj krótką max 2-3 zdaniową informację o wydarzeniu, nie pisz epistoły, szczegóły i tak są w linku!)
-11. Typ imprezy - (tu wpisz info o typie imprezy np. jednorazowe wydarzenie, milonga cotygodniowa, milonga comiesięczna w każdą pierwszą niedzielę miesiąca,coroczny festiwal)
-
-
-
-***jak będziesz wysyłać pełne dane to możesz skasować wszystko do samego końca poczynając od tej linii ;-) 
-
-Instrukcje:
-a. nie zmieniaj tytułu maila
-b. nie zmieniaj układu maila
-c. wpisuj tylko niezbędne informacje bez jakiegokolwiek formatowania, jeżeli np. info ma 3 zdania to ma być ono wpisane w jednej linii)
-d. nie dopisuj nowych linii z numerami, zostaną i tak pominięte
-e. jeżeli zakończenie imprezy jest po północy to data powinna być już kolejnego dnia!
-f. jeżeli impreza to jakiś festiwal z 7 milongami w ciągu 4 dni, to sugeruję dla każdej milongi zrobić oddzielny zestaw danych,
-   wszak będzie to inna data i godzina, inny TDJ, pewnie inna lokalizacji i typ muzyki, oczywiście pod warunkiem, że przewidujesz
-   możliwość wstępu tylko na niektóre milongi a nie włącznie na całość
-
-Przykładowa treść wiadomości:
-1. Nazwa - (Milonga niesamowita)
-2. Adres - (ul.Niesamowita 7/7, 77-777 Miasteczko Zdrój, Polska)
-3. Data od - (2025-09-09 20:00:00)
-4. Data do - (2025-09-10 02:00:00)
-5. Parkietowe - (-)
-6. Organizator - (Banda Tangowych Maniaków)
-7. TDJ - (Zdzisław Bejzik (Polska))
-8. Typ muzyki - (Klasyczna)
-9. Link - (www.BTM.com.pl/milonga)
-10. Info - (Zapraszamy wszystkich zakręconych na nasz skrzypiący parkiet. Butelczyna wina mile widziana podobnie jak przekąski.)
-11. Typ imprezy - (w każdy czwartek z wyłączeniem lipca i sierpnia)
+1. Nazwa - (nazwa wydarzenia)
+2. Adres - (adres gdzie będzie odbywać się wydarzenie)
+3. Data od - (data i godzina rozpoczęcia np. 2025-09-09 20:00:00)
+4. Data do - (datę i godzina zakończenia np. 2025-09-09 23:45:00)
+5. Parkietowe - (wysokość parkietowego np. 50zł/10Euro)
+6. Organizator - (nazwa organizatora)
+7. TDJ - (TDJ ale bez tego TDJ np. Zdzisław Bejzik (Polska))
+8. Typ muzyki - (np. Klasyczna lub Klasyka+Nuevo)
+9. Link - (link do strony z wydarzeniem np. z Facebook)
+10. Info - (krótką max 2-3 zdaniową informację o wydarzeniu)
+11. Typ imprezy - (info o typie imprezy np. milonga cotygodniowa w kazdy czwartek)
