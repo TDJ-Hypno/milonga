@@ -45,7 +45,7 @@
   <div id="map"></div>
 
   <!-- panel główny -->
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.105)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.106)</div>
   <!-- nowy panel z kopertą -->
   <div id="mailPanel" class="info-panel" style="left: 220px;">
     <img class="legend-icon" src="koperta.svg" alt="koperta">
@@ -73,7 +73,7 @@
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Zakończone</div>
   </div>
 
-  <!-- Modal filtrów (bez zmian) -->
+  <!-- Modal filtrów -->
   <div id="filterModal" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%,-50%); background:white; padding:20px; border:1px solid #ccc; z-index:1000; border-radius:8px;">
     <label for="filterSelect">Filtruj wydarzenia: </label>
     <select id="filterSelect" onchange="toggleDateInputs()">
@@ -94,6 +94,7 @@
     <button onclick="applyFilter()">Filtruj</button>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
   <script>
     let map, oms, markers = [], eventsData = [], nightMode = false;
 
@@ -141,7 +142,7 @@
           const now = new Date();
           let from = new Date(now), to = new Date(now), label;
           switch(f) {
-            /* tu wszystkie przypadki jak wcześniej */
+            // … Twoja logika filtrowania …
           }
           document.getElementById('selectedFilter').textContent = label;
           displayEvents(from, to);
@@ -152,15 +153,11 @@
       markers.forEach(m => m.setMap(null));
       markers = [];
       const geocoder = new google.maps.Geocoder();
-      const now = new Date();
-      const today = new Date(now);
-      today.setHours(0,0,0,0);
-
-      /* tu cała pętla geokodowania i tworzenia markerów jak w oryginale */
+      // … Twoja logika tworzenia i podpinania markerów (Spiderfier itp.) …
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // ★ tooltip dla panelu "info-panel" (FB)
+      // tooltip FB
       const panel = document.querySelector('.info-panel');
       const tip   = document.getElementById('contactTooltip');
       const yes   = document.getElementById('contactYes');
@@ -178,7 +175,7 @@
         tip.style.display = 'none';
       });
 
-      // ★ tooltip dla panelu "mailPanel"
+      // tooltip mail
       const mailPanel = document.getElementById('mailPanel');
       const mailTip   = document.getElementById('mailTooltip');
       const mailYes   = document.getElementById('mailYes');
@@ -200,7 +197,7 @@
         mailTip.style.display = 'none';
       });
 
-      // klikanie poza → zamyka oba tooltipy
+      // klik poza → zamyka oba tooltipy
       document.addEventListener('click', e => {
         if (!panel.contains(e.target) && !tip.contains(e.target)) {
           tip.style.display = 'none';
@@ -211,13 +208,10 @@
       });
     });
 
-    // callback dla Google Maps
     window.initMap = initMap;
   </script>
 
-  <!-- biblioteka Spiderfier -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
-  <!-- Twój klucz Google Maps → wklej tu pełny URL, np.: -->
+  <!-- Twój klucz Google Maps i callback -->
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=TWÓJ_KLUCZ&callback=initMap">
   </script>
