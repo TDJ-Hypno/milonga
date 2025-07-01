@@ -14,6 +14,28 @@
     .legend-icon { width: 16px; height: 16px; }
     #contactTooltip { display: none; position: absolute; bottom: 85px; left: 10px; background: lightgray; padding: 8px 12px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 6; }
     #contactTooltip button { margin-right: 6px; padding: 4px 8px; border: 1px solid #888; border-radius: 4px; cursor: pointer; background: white; }
+
+    /* Tooltip dla koperty */
+    #emailTooltip {
+      display: none;
+      position: absolute;
+      bottom: 85px;    /* tak samo jak inne tooltippy */
+      left: 220px;     /* pod kopertą */
+      background: lightgray;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      z-index: 6;
+    }
+    #emailTooltip button {
+      margin-right: 6px;
+      padding: 4px 8px;
+      border: 1px solid #888;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+    }
+    
   </style>
 </head>
 <body>
@@ -24,12 +46,19 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.104)</div>
-  <div class="info-panel" style="left: 220px;">
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.105)</div>
+  <div class="info-panel" id="emailPanel" style="left: 220px;">
   <img class="legend-icon"
          src="koperta.svg"
          //alt="koperta">
   </div>
+
+  <div id="emailTooltip">
+    <p>Chcesz wysłać email z informacją o nowym wydarzeniu tangowym?</p>
+    <button id="emailYes">Tak</button>
+    <button id="emailNo">Nie</button>
+  </div>
+  
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
@@ -180,5 +209,28 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
+
+  <script>
+  // po kliknięciu w kopertę pokaż/ukryj tooltip
+  document.getElementById('emailPanel').onclick = e => {
+    e.stopPropagation();
+    const tip = document.getElementById('emailTooltip');
+    tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
+  };
+  
+  // oba przyciski chowają tooltip
+  ['emailYes','emailNo'].forEach(id => {
+    document.getElementById(id).onclick = e => {
+      e.stopPropagation();
+      document.getElementById('emailTooltip').style.display = 'none';
+    };
+  });
+  
+  // klik gdziekolwiek indziej – też zamknie
+  document.onclick = () => {
+    document.getElementById('emailTooltip').style.display = 'none';
+  };
+  </script>
+  
 </body>
 </html>
