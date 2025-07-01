@@ -46,7 +46,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.105)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.106)</div>
   <div class="info-panel" id="emailPanel" style="left: 220px;">
   <img class="legend-icon"
          src="koperta.svg"
@@ -218,22 +218,18 @@
     tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
   };
   
-  // oba przyciski chowają tooltip
-  //['emailYes','emailNo'].forEach(id => {
-  //  document.getElementById(id).onclick = e => {
-  //    e.stopPropagation();
-  //    document.getElementById('emailTooltip').style.display = 'none';
-  //  };
-  //});
-
   // klik "Tak": zamknij tooltip i otwórz klienta pocztowego
   document.getElementById('emailYes').onclick = e => {
-    e.stopPropagation();
-    document.getElementById('emailTooltip').style.display = 'none';
-    // niżej ustaw temat i treść, jeśli chcesz
-    window.location.href = 
-      'mailto:?subject=Nowe wydarzenie tangowe&body=Chciałbym Cię poinformować o nowym wydarzeniu tangowym.';
-  };
+  e.stopPropagation();
+  fetch('email.txt')
+    .then(r => r.text())
+    .then(text => {
+      document.getElementById('emailTooltip').style.display = 'none';
+      window.location.href = 
+        `mailto:hypno@poczta.onet.pl?subject=${encodeURIComponent('Nowe wydarzenie tangowe')}` +
+        `&body=${encodeURIComponent(text)}`;
+    });
+};
   
   // klik "Nie": tylko zamknij tooltip
   document.getElementById('emailNo').onclick = e => {
