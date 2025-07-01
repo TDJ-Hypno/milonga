@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+.png<!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
@@ -7,64 +7,34 @@
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100%; width: 100%; }
-    #selectedFilter { background-color: lightgray; border-radius: 4px; padding: 4px 8px; font-family: 'Arial', sans-serif; font-size: 10px; display: inline-block; }
-    .custom-button { background-color: lightgray; border-radius: 4px; padding: 4px 8px; border: 1px solid #888; font-family: 'Arial Black', sans-serif; cursor: pointer; }
-    .info-panel { position: absolute; bottom: 55px; left: 10px; background: lightgray; padding: 6px 10px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 5; cursor: pointer; }
-    .legend { position: absolute; bottom: 10px; left: 10px; background: lightgray; padding: 6px 10px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 9px; display: flex; gap: 15px; align-items: center; }
+    #selectedFilter { background-color: lightgray; border-radius: 8px; padding: 4px 8px; font-family: 'Arial', sans-serif; font-size: 10px; display: inline-block; }
+    .custom-button { background-color: lightgray; border-radius: 8px; padding: 6px 10px; border: 2px solid #888; font-family: 'Arial Black', sans-serif; cursor: pointer; }
+    .info-panel { position: absolute; bottom: 55px; left: 10px; background: lightgray; padding: 8px 12px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 5; cursor: pointer; }
+    .legend { position: absolute; bottom: 10px; left: 10px; background: lightgray; padding: 10px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 9px; display: flex; gap: 15px; align-items: center; }
     .legend-icon { width: 16px; height: 16px; }
-    /* jeden tooltip-styl dla obu */
-    #contactTooltip, #mailTooltip {
-      display: none;
-      position: absolute;
-      bottom: 85px;
-      background: lightgray;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-family: 'Arial Black', sans-serif;
-      font-size: 10px;
-      z-index: 6;
-    }
-    #contactTooltip button, #mailTooltip button {
-      margin-right: 6px;
-      padding: 4px 8px;
-      border: 1px solid #888;
-      border-radius: 4px;
-      cursor: pointer;
-      background: white;
-    }
+    #contactTooltip { display: none; position: absolute; bottom: 85px; left: 10px; background: lightgray; padding: 8px 12px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 6; }
+    #contactTooltip button { margin-right: 6px; padding: 4px 8px; border: 1px solid #888; border-radius: 4px; cursor: pointer; background: white; }
   </style>
 </head>
 <body>
-  <!-- górny pasek filtrów -->
   <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
+    
     <button onclick="openFilterModal()" class="custom-button">Filtruj</button>
     <div id="selectedFilter">Wybrano: najbliższe 3 dni</div>
   </div>
 
-  <!-- sama mapa -->
   <div id="map"></div>
-
-  <!-- panel główny -->
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.106)</div>
-  <!-- nowy panel z kopertą -->
-  <div id="mailPanel" class="info-panel" style="left: 220px;">
-    <img class="legend-icon" src="koperta.svg" alt="koperta">
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.104)</div>
+  <div class="info-panel" style="left: 220px;">
+  <img class="legend-icon"
+         src="koperta.svg"
+         //alt="koperta">
   </div>
-
-  <!-- tooltip dla kontaktu FB -->
   <div id="contactTooltip">
     <p>Napiszesz do mnie?</p>
     <button id="contactYes">Tak</button>
     <button id="contactNo">Nie</button>
   </div>
-  <!-- nowy tooltip dla maila -->
-  <div id="mailTooltip" style="left: 220px;">
-    <p>Wysyłamy email o nowym wydarzeniu?</p>
-    <button id="mailYes">Tak</button>
-    <button id="mailNo">Nie</button>
-  </div>
-
-  <!-- legenda kolorów -->
   <div class="legend">
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
@@ -74,12 +44,12 @@
   </div>
 
   <!-- Modal filtrów -->
-  <div id="filterModal" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%,-50%); background:white; padding:20px; border:1px solid #ccc; z-index:1000; border-radius:8px;">
-    <label for="filterSelect">Filtruj wydarzenia: </label>
+  <div id="filterModal" style="display:none; position:fixed; top:50px; left:50%; transform:translateX(-50%); background:lightgray; padding:20px; border:1px solid #ccc; z-index:1000; border-radius:8px;">
+    <h3>Pokaż wydarzenia</h3>
     <select id="filterSelect" onchange="toggleDateInputs()">
-      <option value="all">wszystkie bieżące i przyszłe</option>
+      <option value="all" selected>bieżące i przyszłe</option>
       <option value="today">dzisiaj</option>
-      <option value="next3days" selected>najbliższe 3 dni</option>
+      <option value="next3days">najbliższe 3 dni</option>
       <option value="week">ten tydzień</option>
       <option value="weekend">ten weekend</option>
       <option value="nextweek">następny tydzień</option>
@@ -94,15 +64,11 @@
     <button onclick="applyFilter()">Filtruj</button>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
   <script>
     let map, oms, markers = [], eventsData = [], nightMode = false;
 
     function initMap() {
-      map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
-        center: { lat: 52.1, lng: 19.4 }
-      });
+      map = new google.maps.Map(document.getElementById('map'), { zoom: 10, center: { lat: 52.1, lng: 19.4 } });
       oms = new OverlappingMarkerSpiderfier(map, {
         markersWontMove: true,
         markersWontHide: true,
@@ -120,100 +86,99 @@
       fetch('https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1')
         .then(res => res.json())
         .then(data => {
+          // uwzględnia tylko opłacone
           eventsData = data.filter(e => e['Opłacone'] === 'Tak');
-          applyFilter();
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+              const userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+              map.setCenter(userLoc);
+              const circle = new google.maps.Circle({ center: userLoc, radius: 50000 });
+              map.fitBounds(circle.getBounds());
+              applyFilter();
+            }, () => applyFilter());
+          } else {
+            applyFilter();
+          }
         });
     }
 
-    function openFilterModal() {
-      document.getElementById('filterModal').style.display = 'block';
-    }
-    function toggleDateInputs() {
-      document.getElementById('dateInputs').style.display =
-        document.getElementById('filterSelect').value === 'range' ? 'block' : 'none';
-    }
+    function openFilterModal() { document.getElementById('filterModal').style.display = 'block'; }
+    function toggleDateInputs() { document.getElementById('dateInputs').style.display = document.getElementById('filterSelect').value === 'range' ? 'block' : 'none'; }
 
     function applyFilter() {
       fetch('https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1')
         .then(res => res.json())
         .then(data => {
+          // uwzględnia tylko opłacone
           eventsData = data.filter(e => e['Opłacone'] === 'Tak');
+
           const f = document.getElementById('filterSelect').value;
+          const labels = { all:'bieżące i przyszłe', today:'dzisiaj', next3days:'najbliższe 3 dni', week:'ten tydzień', weekend:'ten weekend', nextweek:'następny tydzień', nextweekend:'następny weekend', ended:'zakończone' };
+          document.getElementById('selectedFilter').textContent = 'Wybrano: ' + (labels[f] || (f==='range'?`zakres od ${document.getElementById('dateFrom').value} do ${document.getElementById('dateTo').value}`:'wszystkie'));
+          document.getElementById('filterModal').style.display = 'none';
+
           const now = new Date();
-          let from = new Date(now), to = new Date(now), label;
+          let from = new Date(now), to = new Date(now);
           switch(f) {
-            // … Twoja logika filtrowania …
+            case 'all': 
+                from = new Date(); // dziś od teraz
+                from.setHours(0, 0, 0, 0);
+                to = new Date(3000, 1, 1); // daleka przyszłość
+                label = "Wybrano: bieżące i przyszłe";
+                break;
+            case 'today': from.setHours(0,0,0,0); to.setHours(23,59,59,999); break;
+            case 'next3days': from.setHours(0,0,0,0); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break;
+            case 'week': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+1); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+6); to.setHours(23,59,59,999); break; }
+            case 'weekend': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+5); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break; }
+            case 'nextweek': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+8); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+6); to.setHours(23,59,59,999); break; }
+            case 'nextweekend': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+12); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break; }
+            case 'ended': from=new Date(2000,1,1); to=new Date(now); to.setHours(23,59,59,999); break;
+            case 'range': from=new Date(document.getElementById('dateFrom').value); from.setHours(0,0,0,0); to=new Date(document.getElementById('dateTo').value); to.setHours(23,59,59,999); break;
           }
-          document.getElementById('selectedFilter').textContent = label;
           displayEvents(from, to);
         });
     }
 
     function displayEvents(startDate, endDate) {
-      markers.forEach(m => m.setMap(null));
-      markers = [];
+      const now = new Date(), today = new Date(now); today.setHours(0,0,0,0);
+      markers.forEach(m=>m.setMap(null)); markers=[];
       const geocoder = new google.maps.Geocoder();
-      // … Twoja logika tworzenia i podpinania markerów (Spiderfier itp.) …
+      function fmtDate(s){ const d=new Date(s); return d.toISOString().replace(/-|:|\.\d{3}/g,''); }
+      const ended = eventsData.filter(e=>new Date(e['Data do'])<today).sort((a,b)=>new Date(a['Data od'])-new Date(b['Data od']));
+      const future=eventsData.filter(e=>new Date(e['Data do'])>=today).sort((a,b)=>new Date(b['Data od'])-new Date(a['Data od']));
+      [...ended,...future].forEach((ev,i)=>{
+        const s=new Date(ev['Data od']), e=new Date(ev['Data do']);
+        if(s> endDate||e< startDate) return;
+        geocoder.geocode({address:ev.Adres},(res,st)=>{ if(st!=='OK') return;
+          const pos=res[0].geometry.location;
+          const diff=Math.floor((s-today)/(1000*60*60*24));
+          let col='blue'; if(diff===0)col='red';else if(diff===1)col='orange';else if(diff===2)col='yellow';else if(diff>2)col='green';
+          const marker=new google.maps.Marker({map,position:pos,optimized:false,zIndex:i,icon:{url:`https://maps.google.com/mapfiles/ms/icons/${col}-dot.png`},title:`${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`});
+          markers.push(marker);
+          const cs = s>now?`<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje+'\n'+ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`:'';
+          const content=`<div style="font-family:'Arial Black', sans-serif;"><h3>${ev.Nazwa}</h3><p><strong>Adres:</strong> ${ev.Adres}</p><p><strong>Od: </strong>${ev['Data od']}</p><p><strong>Do: </strong>${ev['Data do']}</p><p><strong>Parkietowe: </strong>${ev.Parkietowe}</p><p><strong>Organizator: </strong>${ev.Organizator}</p><p><strong>TDJ: </strong>${ev.TDJ}</p><p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p><p><strong>Info: </strong>${ev.Informacje}</p><p><a href="${ev.Link}" target="_blank">Link</a></p><p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>${cs}</div>`;
+          const cleaned = content.replace(/undefined/g, 'b.d.');
+          const iw = new google.maps.InfoWindow({ content: cleaned });
+          marker.customInfo = cleaned;
+          oms.addMarker(marker);
+        });
+      });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // tooltip FB
-      const panel = document.querySelector('.info-panel');
-      const tip   = document.getElementById('contactTooltip');
-      const yes   = document.getElementById('contactYes');
-      const no    = document.getElementById('contactNo');
-      panel.addEventListener('click', e => {
-        tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
-      });
-      yes.addEventListener('click', e => {
-        e.stopPropagation();
-        tip.style.display = 'none';
-        window.open('https://m.me/tdj.hypno.piotr.smolen','_blank');
-      });
-      no.addEventListener('click', e => {
-        e.stopPropagation();
-        tip.style.display = 'none';
-      });
-
-      // tooltip mail
-      const mailPanel = document.getElementById('mailPanel');
-      const mailTip   = document.getElementById('mailTooltip');
-      const mailYes   = document.getElementById('mailYes');
-      const mailNo    = document.getElementById('mailNo');
-      mailPanel.addEventListener('click', e => {
-        e.stopPropagation();
-        mailTip.style.display = mailTip.style.display === 'block' ? 'none' : 'block';
-      });
-      mailYes.addEventListener('click', e => {
-        e.stopPropagation();
-        mailTip.style.display = 'none';
-        window.location.href =
-          'mailto:hypno@poczta.onet.pl'
-          + '?subject=' + encodeURIComponent('Pinezka tangowa')
-          + '&body='    + encodeURIComponent('Proszę o dodanie pinezki tangowej.');
-      });
-      mailNo.addEventListener('click', e => {
-        e.stopPropagation();
-        mailTip.style.display = 'none';
-      });
-
-      // klik poza → zamyka oba tooltipy
-      document.addEventListener('click', e => {
-        if (!panel.contains(e.target) && !tip.contains(e.target)) {
-          tip.style.display = 'none';
-        }
-        if (!mailPanel.contains(e.target) && !mailTip.contains(e.target)) {
-          mailTip.style.display = 'none';
-        }
-      });
+    document.addEventListener('DOMContentLoaded',()=>{
+      const panel=document.querySelector('.info-panel');
+      const tip=document.getElementById('contactTooltip');
+      const yes=document.getElementById('contactYes');
+      const no=document.getElementById('contactNo');
+      panel.addEventListener('click',()=>tip.style.display=tip.style.display==='block'?'none':'block');
+      yes.addEventListener('click',e=>{e.stopPropagation();tip.style.display='none';window.open('https://m.me/tdj.hypno.piotr.smolen','_blank');});
+      no.addEventListener('click', e=>{e.stopPropagation();tip.style.display='none';});
+      document.addEventListener('click', e=>{if(!panel.contains(e.target)&&!tip.contains(e.target))tip.style.display='none';});
     });
 
     window.initMap = initMap;
   </script>
-
-  <!-- Twój klucz Google Maps i callback -->
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=TWÓJ_KLUCZ&callback=initMap">
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 </body>
 </html>
