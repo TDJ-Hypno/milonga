@@ -9,4 +9,4 @@ Proszę dodać pinezkę tangową:
 8. Typ muzyki - (np. Klasyczna lub Klasyka+Nuevo)
 9. Link - (link do strony z wydarzeniem np. z Facebook)
 10. Info - (krótką max 2-3 zdaniową informację o wydarzeniu)
-11. Typ imprezy - (info o typie imprezy np. milonga cotygodniowa w kazdy czwartek)
+11. Typ imprezy - (info o typie imprezy np. milonga cotygodniowa w każdy czwartek)
