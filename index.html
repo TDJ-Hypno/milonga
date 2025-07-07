@@ -35,6 +35,23 @@
       background: white;
       cursor: pointer;
     }
+
+    .pulse {
+      display: inline-block;
+      font-weight: bold;
+      animation: pulse 0.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%   { transform: scale(1);   opacity: 1;   color: red;        text-shadow: none; }
+      50%  { transform: scale(1); opacity: 0.5; color: black;    text-shadow: 0 0 8px yellow; }
+      100% { transform: scale(1);   opacity: 1;   color: red;        text-shadow: none; }
+    }
+
+    /* zmniejsza odstęp między p w okienku InfoWindow */
+    .gm-style .gm-style-iw p {
+      margin: 4px 0 !important;
+      line-height: 1.2;
+    }
     
   </style>
 </head>
@@ -46,7 +63,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.106)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.117)</div>
   <div class="info-panel" id="emailPanel" style="left: 220px;">
   <img class="legend-icon"
          src="koperta.svg"
@@ -173,25 +190,119 @@
       markers.forEach(m=>m.setMap(null)); markers=[];
       const geocoder = new google.maps.Geocoder();
       function fmtDate(s){ const d=new Date(s); return d.toISOString().replace(/-|:|\.\d{3}/g,''); }
-      const ended = eventsData.filter(e=>new Date(e['Data do'])<today).sort((a,b)=>new Date(a['Data od'])-new Date(b['Data od']));
-      const future=eventsData.filter(e=>new Date(e['Data do'])>=today).sort((a,b)=>new Date(b['Data od'])-new Date(a['Data od']));
-      [...ended,...future].forEach((ev,i)=>{
-        const s=new Date(ev['Data od']), e=new Date(ev['Data do']);
-        if(s> endDate||e< startDate) return;
-        geocoder.geocode({address:ev.Adres},(res,st)=>{ if(st!=='OK') return;
-          const pos=res[0].geometry.location;
-          const diff=Math.floor((s-today)/(1000*60*60*24));
-          let col='blue'; if(diff===0)col='red';else if(diff===1)col='orange';else if(diff===2)col='yellow';else if(diff>2)col='green';
-          const marker=new google.maps.Marker({map,position:pos,optimized:false,zIndex:i,icon:{url:`https://maps.google.com/mapfiles/ms/icons/${col}-dot.png`},title:`${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`});
+
+      // --- przygotuj listę wydarzeń z przeliczonymi datami ---
+      const items = eventsData.map(ev => {
+        // 1) parsujemy oryginalne daty
+        let s = new Date(ev['Data od']),
+            e = new Date(ev['Data do']);
+        // 2) recalc dla Dzien_tygodnia
+        const weekdayMap = {
+          niedziela:0, poniedziałek:1, wtorek:2,
+          środa:3, czwartek:4, piątek:5, sobota:6
+        };
+        let dn = (ev['Dzien_tygodnia']||'').toLowerCase().trim();
+        if (weekdayMap.hasOwnProperty(dn)) {
+          const base = new Date(today);
+          base.setHours(0,0,0,0);
+          const offset = (weekdayMap[dn] - base.getDay() + 7) % 7;
+          const origS = new Date(s), origE = new Date(e);
+          const newS = new Date(base);
+          newS.setDate(base.getDate() + offset);
+          newS.setHours(origS.getHours(), origS.getMinutes(), origS.getSeconds(), origS.getMilliseconds());
+          const sd = new Date(origS); sd.setHours(0,0,0,0);
+          const ed = new Date(origE); ed.setHours(0,0,0,0);
+          const dayDiff = Math.round((ed - sd)/(1000*60*60*24));
+          const newE = new Date(newS);
+          newE.setDate(newS.getDate() + dayDiff);
+          newE.setHours(origE.getHours(), origE.getMinutes(), origE.getSeconds(), origE.getMilliseconds());
+          s = newS; e = newE;
+        }
+        return { ev, s, e };
+      })
+      // 3) filtruj wg przedziału
+      .filter(({s,e}) => !(s > endDate || e < startDate))
+      // 4) sortuj malejąco po s → najdalsze jako pierwsze
+      .sort((a,b) => b.s - a.s);
+      
+      // --- rysuj markery w tej kolejności ---
+      items.forEach(({ev, s, e}, i) => {
+        geocoder.geocode({ address: ev.Adres }, (res, st) => {
+          if (st !== 'OK') return;
+          const pos = res[0].geometry.location;
+      
+          // wybór koloru jak dotąd
+          const diff = Math.floor((s - today)/(1000*60*60*24));
+          let col;
+          if (s <= today && e >= today)       col = 'red';
+          else if (diff === 0)                col = 'red';
+          else if (diff === 1)                col = 'orange';
+          else if (diff === 2)                col = 'yellow';
+          else if (diff > 2)                  col = 'green';
+          else                                 col = 'blue';
+      
+          // tworzenie markera (tak jak w 0.106)
+          const zIndexMap = { red: 5, orange: 4, yellow: 3, green: 2, blue: 1 };
+
+          // zbudujmy tooltip (title) uwzględniając dzień tygodnia, jeśli jest
+          let tipTitle = `${ev.Nazwa}`;
+          if (ev['Dzien_tygodnia']) {
+            tipTitle += `\nMilonga cykliczna: ${ev['Dzien_tygodnia']}`;
+            tipTitle += `\nUpewnij się czy będzie!!!`;
+          }
+          tipTitle += `\n${ev['Data od']} – ${ev['Data do']}`;
+          
+          const marker = new google.maps.Marker({
+            map,
+            position: pos,
+            optimized: false,
+            zIndex:      zIndexMap[col],
+            icon:        { url: `https://maps.google.com/mapfiles/ms/icons/${col}-dot.png` },
+            //title:       `${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`
+            title:  tipTitle
+          });
           markers.push(marker);
-          const cs = s>now?`<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje+'\n'+ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`:'';
-          const content=`<div style="font-family:'Arial Black', sans-serif;"><h3>${ev.Nazwa}</h3><p><strong>Adres:</strong> ${ev.Adres}</p><p><strong>Od: </strong>${ev['Data od']}</p><p><strong>Do: </strong>${ev['Data do']}</p><p><strong>Parkietowe: </strong>${ev.Parkietowe}</p><p><strong>Organizator: </strong>${ev.Organizator}</p><p><strong>TDJ: </strong>${ev.TDJ}</p><p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p><p><strong>Info: </strong>${ev.Informacje}</p><p><a href="${ev.Link}" target="_blank">Link</a></p><p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>${cs}</div>`;
+      
+          const cs = s > now
+            ? `<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje + '\n' + ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`
+            : '';
+      
+          // przygotuj dodatkowe linie dla cyklicznych
+          let cycDetails = '';
+          if (ev['Dzien_tygodnia']) {
+            cycDetails = `
+              <p><strong>Milonga cykliczna:</strong> ${ev['Dzien_tygodnia']}</p>
+              <p class="pulse">Sprawdź u organizatora czy na pewno będzie!!!</p>
+            `;
+          }
+          
+          const content = `
+            <div style="font-family:'Arial Black', sans-serif;">
+              <h3>${ev.Nazwa}</h3>
+              <p><strong>Adres:</strong> ${ev.Adres}</p>
+              <p><strong>Od: </strong>${ev['Data od']}</p>
+              <p><strong>Do: </strong>${ev['Data do']}</p>
+              ${cycDetails}
+              <p><strong>Parkietowe: </strong>${ev.Parkietowe}</p>
+              <p><strong>Organizator: </strong>${ev.Organizator}</p>
+              <p><strong>TDJ: </strong>${ev.TDJ}</p>
+              <p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p>
+              <p><strong>Info: </strong>${ev.Informacje}</p>
+              <p><a href="${ev.Link}" target="_blank">Link</a></p>
+              <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>
+              ${cs}
+            </div>
+          `;
+      
           const cleaned = content.replace(/undefined/g, 'b.d.');
           const iw = new google.maps.InfoWindow({ content: cleaned });
           marker.customInfo = cleaned;
           oms.addMarker(marker);
         });
       });
+      
+
+      
     }
 
     document.addEventListener('DOMContentLoaded',()=>{
