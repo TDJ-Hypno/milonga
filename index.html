@@ -7,20 +7,105 @@
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100%; width: 100%; }
-    #selectedFilter { background-color: lightgray; border-radius: 8px; padding: 4px 8px; font-family: 'Arial', sans-serif; font-size: 10px; display: inline-block; }
-    .custom-button { background-color: lightgray; border-radius: 8px; padding: 6px 10px; border: 2px solid #888; font-family: 'Arial Black', sans-serif; cursor: pointer; }
-    .info-panel { position: absolute; bottom: 65px; left: 10px; background: lightgray; padding: 8px 12px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 5; cursor: pointer; }
-    .legend { position: absolute; bottom: 10px; left: 10px; background: lightgray; padding: 10px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 9px; display: flex; gap: 15px; align-items: center; }
-    .legend-icon { width: 16px; height: 16px; }
-    #contactTooltip { display: none; position: absolute; bottom: 85px; left: 10px; background: lightgray; padding: 8px 12px; border-radius: 8px; font-family: 'Arial Black', sans-serif; font-size: 10px; z-index: 6; }
-    #contactTooltip button { margin-right: 6px; padding: 4px 8px; border: 1px solid #888; border-radius: 4px; cursor: pointer; background: white; }
+    
+    #selectedFilter {
+        background-color: lightgray;
+        border-radius: 8px;
+        padding: 4px 8px;
+        font-family: 'Arial', sans-serif;
+        font-size: 10px;
+        display: inline-block;
+    }
+    
+    .custom-button {
+        background-color: lightgray;
+        border-radius: 8px;
+        padding: 6px 10px;
+        border: 2px solid #888;
+        font-family: 'Arial Black', sans-serif;
+        cursor: pointer;
+    }
+    
+    .info-panel {
+        position: absolute;
+        bottom: 84px;
+        left: 10px;
+        background: lightgray;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-family: 'Arial Black', sans-serif;
+        font-size: 10px;
+        z-index: 5;
+        cursor: pointer;
+    }
+
+    /* spraw, by #emailPanel dopasowywał się wysokością do .info-panel */
+    #emailPanel {
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    .visit-panel {
+        position: absolute;
+        bottom: 52px;
+        left: 10px;
+        background: lightgray;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-family: 'Arial Black', sans-serif;
+        font-size: 10px;
+        z-index: 5;
+        cursor: pointer;
+    }
+    
+    .legend {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: lightgray;
+        padding: 10px;
+        border-radius: 8px;
+        font-family: 'Arial Black', sans-serif;
+        font-size: 9px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        z-index: 3;
+    }
+    
+    .legend-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    #contactTooltip {
+      display: none;
+      position: absolute;
+      bottom: 85px;
+      left: 10px;
+      background: lightgray;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 10px;
+      z-index: 6;
+    }
+    
+    #contactTooltip button {
+      margin-right: 6px;
+      padding: 4px 8px;
+      border: 1px solid #888;
+      border-radius: 4px;
+      cursor: pointer;
+      background: white;
+    }
 
     /* Tooltip dla koperty */
     #emailTooltip {
       display: none;
       position: absolute;
       bottom: 85px;    /* tak samo jak inne tooltippy */
-      left: 220px;     /* pod kopertą */
+      left: 200px;     /* pod kopertą */
       background: lightgray;
       padding: 8px;
       border-radius: 8px;
@@ -63,12 +148,24 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.119)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.127)</div>
+
   <div class="info-panel" id="emailPanel" style="left: 220px;">
-  <img class="legend-icon"
-         src="koperta.svg"
-         //alt="koperta">
+    <img class="legend-icon" src="koperta.svg" alt="koperta">
   </div>
+  
+  <div class="visit-panel">
+    <span id="visit-count">–</span>
+  </div>
+  
+  <div class="legend">
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/green-dot.png"> Kolejne</div>
+    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Zakończone</div>
+  </div>
+
 
   <div id="emailTooltip">
     <p>Chcesz wysłać email z informacją o nowym wydarzeniu tangowym?</p>
@@ -81,13 +178,7 @@
     <button id="contactYes">Tak</button>
     <button id="contactNo">Nie</button>
   </div>
-  <div class="legend">
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/orange-dot.png"> Jutro</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/yellow-dot.png"> Pojutrze</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/green-dot.png"> Kolejne</div>
-    <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Zakończone</div>
-  </div>
+  
 
   <!-- Modal filtrów -->
   <div id="filterModal" style="display:none; position:fixed; top:50px; left:50%; transform:translateX(-50%); background:lightgray; padding:20px; border:1px solid #ccc; z-index:1000; border-radius:8px;">
@@ -370,6 +461,31 @@
   document.onclick = () => {
     document.getElementById('emailTooltip').style.display = 'none';
   };
+  </script>
+
+  <script>
+  window.addEventListener('load', async () => {
+      const VISIT_API = 'https://script.google.com/macros/s/AKfycby1-c97w1-OduqoQyZLzVcc7TqXeFij5sUUmUdePnzZqOg5UrKYYLvronCRFUfDoW-sGg/exec';  // Twój URL
+      try {
+        // 1) Pobierz informacje geolokalizacyjne
+        const geo = await fetch('https://ipapi.co/json').then(r => r.json());
+        const country = (geo.country_code || 'ALL').toUpperCase();
+        
+        // 2) Wez Web App z parametrem country
+        const res = await fetch(`${VISIT_API}?country=${country}`);
+        const stats = await res.json();  // to będzie tablica z obiektami {country, visits}
+        
+        // 3) Oblicz sumę i liczbę krajów
+        const total    = stats.find(r => r.country === 'ALL').visits;
+        const countries= stats.filter(r => r.country !== 'ALL' && r.visits > 0).length;
+        
+        // 4) Wstaw do panelu
+        document.getElementById('visit-count').textContent =
+          `${total} odwiedzin z ${countries} krajów`;
+      } catch (err) {
+        console.error('Błąd pobierania statystyk:', err);
+      }
+    });
   </script>
   
 </body>
