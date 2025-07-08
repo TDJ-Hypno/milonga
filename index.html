@@ -63,7 +63,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.117)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.118)</div>
   <div class="info-panel" id="emailPanel" style="left: 220px;">
   <img class="legend-icon"
          src="koperta.svg"
@@ -94,6 +94,7 @@
     <h3>Pokaż wydarzenia</h3>
     <select id="filterSelect" onchange="toggleDateInputs()">
       <option value="all" selected>bieżące i przyszłe</option>
+      <option value="cyclic">cykliczne</option>
       <option value="today">dzisiaj</option>
       <option value="next3days">najbliższe 3 dni</option>
       <option value="week">ten tydzień</option>
@@ -159,7 +160,7 @@
           eventsData = data.filter(e => e['Opłacone'] === 'Tak');
 
           const f = document.getElementById('filterSelect').value;
-          const labels = { all:'bieżące i przyszłe', today:'dzisiaj', next3days:'najbliższe 3 dni', week:'ten tydzień', weekend:'ten weekend', nextweek:'następny tydzień', nextweekend:'następny weekend', ended:'zakończone' };
+          const labels = { all:'bieżące i przyszłe', cyclic: 'cykliczne', today:'dzisiaj', next3days:'najbliższe 3 dni', week:'ten tydzień', weekend:'ten weekend', nextweek:'następny tydzień', nextweekend:'następny weekend', ended:'zakończone' };
           document.getElementById('selectedFilter').textContent = 'Wybrano: ' + (labels[f] || (f==='range'?`zakres od ${document.getElementById('dateFrom').value} do ${document.getElementById('dateTo').value}`:'wszystkie'));
           document.getElementById('filterModal').style.display = 'none';
 
@@ -172,6 +173,17 @@
                 to = new Date(3000, 1, 1); // daleka przyszłość
                 label = "Wybrano: bieżące i przyszłe";
                 break;
+
+            case 'cyclic': {
+                const d = new Date(now);
+                d.setDate(d.getDate() - d.getDay() + 1);
+                from.setTime(d);
+                to = new Date(d);
+                to.setDate(to.getDate() + 6);
+                to.setHours(23, 59, 59, 999);
+                break;
+            }
+              
             case 'today': from.setHours(0,0,0,0); to.setHours(23,59,59,999); break;
             case 'next3days': from.setHours(0,0,0,0); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break;
             case 'week': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+1); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+6); to.setHours(23,59,59,999); break; }
@@ -181,6 +193,12 @@
             case 'ended': from=new Date(2000,1,1); to=new Date(now); to.setHours(23,59,59,999); break;
             case 'range': from=new Date(document.getElementById('dateFrom').value); from.setHours(0,0,0,0); to=new Date(document.getElementById('dateTo').value); to.setHours(23,59,59,999); break;
           }
+
+          if (f === 'cyclic') {
+            // zachowujemy tylko te z niepustym Dzien_tygodnia
+            eventsData = eventsData.filter(e => e['Dzien_tygodnia']);
+          }
+          
           displayEvents(from, to);
         });
     }
