@@ -2,8 +2,11 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
   <title>Mapa milong</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100%; width: 100%; }
@@ -137,6 +140,25 @@
       margin: 4px 0 !important;
       line-height: 1.2;
     }
+
+    /* pomniejszamy przycisk Ustawień o 20% względem oryginału */
+    #settingsPanel {
+      transform: scale(0.8);
+      transform-origin: bottom left;
+    }
+
+    /* mały X w prawym górnym rogu modala */
+    #settingsModal {
+      position: relative; /* aby X mógł być absolutnie w nim pozycjonowany */
+    }
+    #closeSettingsBtn {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
     
   </style>
 </head>
@@ -148,15 +170,21 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.127)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.142)</div>
 
-  <div class="info-panel" id="emailPanel" style="left: 220px;">
+  <div class="info-panel" id="emailPanel" style="left: 250px;">
+  
+    
     <img class="legend-icon" src="koperta.svg" alt="koperta">
   </div>
   
   <div class="visit-panel">
     <span id="visit-count">–</span>
   </div>
+
+  <div class="info-panel" id="settingsPanel" style="bottom: 52px; left: 230px;">
+  <img class="legend-icon" src="trybik_72.png" alt="Ustawienia">
+</div>
   
   <div class="legend">
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
@@ -200,6 +228,22 @@
       <label>Do: <input type="date" id="dateTo"></label><br><br>
     </div>
     <button onclick="applyFilter()">Filtruj</button>
+  </div>
+
+  <!-- Modal Ustawień -->
+  <div id="settingsModal" style="display:none;
+      position:fixed;
+      top:50px;
+      left:50%;
+      transform:translateX(-50%);
+      background:lightgray;
+      padding:20px;
+      border:1px solid #ccc;
+      z-index:1000;
+    border-radius:8px;">
+    <h3>Ustawienia</h3>
+    <span id="closeSettingsBtn">×</span>
+    <button id="addShortcutBtn">Dodaj skrót do pulpitu</button>
   </div>
 
   <script>
@@ -428,6 +472,7 @@
     window.initMap = initMap;
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
+ 
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAjzcvQPS-dgli4FvWTMnUgkB0Fr4hbkdQ&callback=initMap"></script>
 
   <script>
@@ -481,12 +526,65 @@
         
         // 4) Wstaw do panelu
         document.getElementById('visit-count').textContent =
-          `${total} odwiedzin z ${countries} krajów`;
+          `Wizyt: ${total} z krajów: ${countries}`;
       } catch (err) {
         console.error('Błąd pobierania statystyk:', err);
       }
     });
   </script>
+
+  <script>
+    // znajdź elementy
+    const btn   = document.getElementById('settingsPanel');
+    const modal = document.getElementById('settingsModal');
+    
+    // 1) klik → pokaz
+    btn.addEventListener('click', () => {
+      modal.style.display = 'block';
+    });
+    
+    // 2) klik na obszar poza zawartością modala → ukryj
+    modal.addEventListener('click', e => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });  
+  </script>
+
+  <script>
+  // zamknij modal po kliknięciu X
+  document.getElementById('closeSettingsBtn')
+    .addEventListener('click', () => {
+      document.getElementById('settingsModal').style.display = 'none';
+    });
+  </script>
+
+  <script>
+    // 1) Rejestruj SW
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () =>
+        navigator.serviceWorker.register('sw.js').catch(console.error)
+      );
+    }
+    // 2) Przechwyć prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+    // 3) Hook przycisk
+    document.getElementById('addShortcutBtn')
+    .addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('Install choice:', outcome);
+      deferredPrompt = null;
+    });
+  </script>
+
+  
   
 </body>
+  
 </html>
