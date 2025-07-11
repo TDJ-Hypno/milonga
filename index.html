@@ -170,7 +170,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.142)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.143)</div>
 
   <div class="info-panel" id="emailPanel" style="left: 250px;">
   
@@ -531,6 +531,18 @@
         console.error('Błąd pobierania statystyk:', err);
       }
     });
+
+    // jeżeli URL zawiera #settings lub ?settings=1 → otwórz modal
+    window.addEventListener('load', () => {
+      const hash = window.location.hash;
+      const params = new URLSearchParams(window.location.search);
+      if (hash === '#settings' || params.get('settings') === '1') {
+        // wywołaj tę samą funkcję co przy kliknięciu ikonki
+        document.getElementById('settingsPanel').click();
+      }
+    });
+
+    
   </script>
 
   <script>
