@@ -170,7 +170,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.143)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.147)</div>
 
   <div class="info-panel" id="emailPanel" style="left: 250px;">
   
@@ -183,7 +183,13 @@
   </div>
 
   <div class="info-panel" id="settingsPanel" style="bottom: 52px; left: 230px;">
-  <img class="legend-icon" src="trybik_72.png" alt="Ustawienia">
+    <img class="legend-icon" src="trybik_72.png" alt="Ustawienia">
+  </div>
+
+  <div class="info-panel" id="qrPanel" style="bottom: 52px; left: 280px;">
+    QR
+  </div>
+    
 </div>
   
   <div class="legend">
@@ -244,6 +250,24 @@
     <h3>Ustawienia</h3>
     <span id="closeSettingsBtn">×</span>
     <button id="addShortcutBtn">Dodaj skrót do pulpitu</button>
+  </div>
+
+  <!-- Modal z kodem QR -->
+  <div id="qrModal" style="
+      display: none;
+      position: fixed;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: lightgray;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      z-index: 1000;
+    ">
+    <img src="Instalka-QR.png" alt="Kod QR" style="max-width:100%; height:auto;">
+    <br><br>
+    <button id="closeQrBtn" class="custom-button">Zamknij</button>
   </div>
 
   <script>
@@ -531,18 +555,6 @@
         console.error('Błąd pobierania statystyk:', err);
       }
     });
-
-    // jeżeli URL zawiera #settings lub ?settings=1 → otwórz modal
-    window.addEventListener('load', () => {
-      const hash = window.location.hash;
-      const params = new URLSearchParams(window.location.search);
-      if (hash === '#settings' || params.get('settings') === '1') {
-        // wywołaj tę samą funkcję co przy kliknięciu ikonki
-        document.getElementById('settingsPanel').click();
-      }
-    });
-
-    
   </script>
 
   <script>
@@ -595,6 +607,25 @@
     });
   </script>
 
+  <script>
+    // 1) Po kliknięciu “QR” pokaż modal
+    document.getElementById('qrPanel').addEventListener('click', () => {
+      document.getElementById('qrModal').style.display = 'block';
+    });
+  
+    // 2) Po kliknięciu “Zamknij” zamknij modal
+    document.getElementById('closeQrBtn').addEventListener('click', () => {
+      document.getElementById('qrModal').style.display = 'none';
+    });
+  
+    // 3) Kliknięcie w tle modala też go ukryje
+    window.addEventListener('click', e => {
+      const modal = document.getElementById('qrModal');
+      if (modal.style.display === 'block' && e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  </script>
   
   
 </body>
