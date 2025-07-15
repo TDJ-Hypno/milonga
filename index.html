@@ -159,10 +159,31 @@
       font-weight: bold;
       cursor: pointer;
     }
+
+    /* pełnoekranowy splash z białym tłem i obrazkiem na środku */
+    #splash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #splash img {
+      max-width: 80%;
+      max-height: 80%;
+    }
     
   </style>
 </head>
 <body>
+
+  <div id="splash">
+    <img src="ikona_512v2.png" alt="Splash">
+  </div>
+  
   <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
     
     <button onclick="openFilterModal()" class="custom-button">Filtruj</button>
@@ -170,7 +191,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.147)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.150)</div>
 
   <div class="info-panel" id="emailPanel" style="left: 250px;">
   
@@ -215,7 +236,7 @@
   
 
   <!-- Modal filtrów -->
-  <div id="filterModal" style="display:none; position:fixed; top:50px; left:50%; transform:translateX(-50%); background:lightgray; padding:20px; border:1px solid #ccc; z-index:1000; border-radius:8px;">
+  <div id="filterModal" style="display:none; position:fixed; top:50px; left:50%; transform:translateX(-50%, -50%); background:lightgray; padding:20px; border:1px solid #ccc; z-index:1000; border-radius:8px;">
     <h3>Pokaż wydarzenia</h3>
     <select id="filterSelect" onchange="toggleDateInputs()">
       <option value="all" selected>bieżące i przyszłe</option>
@@ -239,7 +260,7 @@
   <!-- Modal Ustawień -->
   <div id="settingsModal" style="display:none;
       position:fixed;
-      top:50px;
+      top: 200px;
       left:50%;
       transform:translateX(-50%);
       background:lightgray;
@@ -256,14 +277,13 @@
   <div id="qrModal" style="
       display: none;
       position: fixed;
-      top: 50px;
+      top: 100px;
       left: 50%;
       transform: translateX(-50%);
       background: lightgray;
       padding: 20px;
       border: 1px solid #ccc;
       border-radius: 8px;
-      z-index: 1000;
     ">
     <img src="Instalka-QR.png" alt="Kod QR" style="max-width:100%; height:auto;">
     <br><br>
@@ -427,7 +447,7 @@
             tipTitle += `\nMilonga cykliczna: ${ev['Dzien_tygodnia']}`;
             tipTitle += `\nUpewnij się czy będzie!!!`;
           }
-          tipTitle += `\n${ev['Data od']} – ${ev['Data do']}`;
+          tipTitle += `\n${s.toLocaleString()} – ${e.toLocaleString()}`;
           
           const marker = new google.maps.Marker({
             map,
@@ -457,8 +477,8 @@
             <div style="font-family:'Arial Black', sans-serif;">
               <h3>${ev.Nazwa}</h3>
               <p><strong>Adres:</strong> ${ev.Adres}</p>
-              <p><strong>Od: </strong>${ev['Data od']}</p>
-              <p><strong>Do: </strong>${ev['Data do']}</p>
+              <p><strong>Od: </strong>${s.toLocaleString()}</p>
+              <p><strong>Do: </strong>${e.toLocaleString()}</p>
               ${cycDetails}
               <p><strong>Parkietowe: </strong>${ev.Parkietowe}</p>
               <p><strong>Organizator: </strong>${ev.Organizator}</p>
@@ -626,7 +646,16 @@
       }
     });
   </script>
-  
+
+  <script>
+    // po załadowaniu strony odczekaj 3000 ms i ukryj splash
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const s = document.getElementById('splash');
+        if (s) s.style.display = 'none';
+      }, 3000);
+    });
+  </script>
   
 </body>
   
