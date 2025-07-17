@@ -669,39 +669,40 @@
   </script>
 
   <script>
-    // 1) Rejestruj SW
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () =>
-        navigator.serviceWorker.register('sw.js').catch(console.error)
-      );
-    }
-  
-    // 2) Przechwyć prompt i – gdy parametr settings=1 – od razu go wywołaj
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-  
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('settings') === '1') {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(choice => {
-          console.log('Install choice:', choice.outcome);
-          deferredPrompt = null;
-        });
-      }
-    });
-  
-    // 3) Hook przycisk – zostaw bez zmian
-    document.getElementById('addShortcutBtn')
-      .addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log('Install choice:', outcome);
+  // 1) Rejestruj SW
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () =>
+      navigator.serviceWorker.register('sw.js').catch(console.error)
+    );
+  }
+
+  // 2) Przechwyć prompt i – gdy parametr settings=1 – wywołaj go od razu
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('settings') === '1') {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choice => {
+        console.log('Install choice:', choice.outcome);
         deferredPrompt = null;
       });
-  </script>
+    }
+  });
+
+  // 3) Hook przycisk – nadal działa ręczne wywołanie
+  document.getElementById('addShortcutBtn')
+    .addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('Install choice:', outcome);
+      deferredPrompt = null;
+    });
+</script>
+
 
   <script>
     // 1) Po kliknięciu “QR” pokaż modal
