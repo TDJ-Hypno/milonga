@@ -191,7 +191,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.150)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.159)</div>
 
   <div class="info-panel" id="emailPanel" style="left: 250px;">
   
@@ -250,6 +250,7 @@
       <option value="range">w zakresie</option>
       <option value="ended">zakończone</option>
     </select><br><br>
+    
     <div id="dateInputs" style="display:none;">
       <label>Od: <input type="date" id="dateFrom"></label><br><br>
       <label>Do: <input type="date" id="dateTo"></label><br><br>
@@ -354,30 +355,79 @@
                 break;
 
             case 'cyclic': {
-                const d = new Date(now);
-                d.setDate(d.getDate() - d.getDay() + 1);
-                from.setTime(d);
-                to = new Date(d);
-                to.setDate(to.getDate() + 6);
-                to.setHours(23, 59, 59, 999);
+                // od dziś 00:00
+                const start = new Date(now);
+                start.setHours(0, 0, 0, 0);
+                // do za 6 dni 23:59:59
+                const end = new Date(start);
+                end.setDate(end.getDate() + 6);
+                end.setHours(23, 59, 59, 999);
+                from = start;
+                to   = end;
                 break;
             }
               
-            case 'today': from.setHours(0,0,0,0); to.setHours(23,59,59,999); break;
-            case 'next3days': from.setHours(0,0,0,0); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break;
-            case 'week': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+1); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+6); to.setHours(23,59,59,999); break; }
-            case 'weekend': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+5); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break; }
-            case 'nextweek': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+8); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+6); to.setHours(23,59,59,999); break; }
-            case 'nextweekend': { const d=new Date(now); d.setDate(d.getDate()-d.getDay()+12); from.setTime(d); to=new Date(d); to.setDate(to.getDate()+2); to.setHours(23,59,59,999); break; }
-            case 'ended': from=new Date(2000,1,1); to=new Date(now); to.setHours(23,59,59,999); break;
-            case 'range': from=new Date(document.getElementById('dateFrom').value); from.setHours(0,0,0,0); to=new Date(document.getElementById('dateTo').value); to.setHours(23,59,59,999); break;
+            case 'today': from.setHours(0,0,0,0);
+                to.setHours(23,59,59,999);
+              break;
+              
+            case 'next3days': from.setHours(0,0,0,0);
+                to.setDate(to.getDate()+2);
+                to.setHours(23,59,59,999);
+              break;
+              
+            case 'week': { const d=new Date(now);
+                d.setDate(d.getDate()-d.getDay()+1);
+                from.setTime(d);
+                to=new Date(d);
+                to.setDate(to.getDate()+6);
+                to.setHours(23,59,59,999);
+              break; }
+              
+            case 'weekend': { const d=new Date(now);
+                d.setDate(d.getDate()-d.getDay()+5);
+                from.setTime(d);
+                to=new Date(d);
+                to.setDate(to.getDate()+2);
+                to.setHours(23,59,59,999);
+              break; }
+              
+            case 'nextweek': {
+              const d = new Date(now);
+              d.setDate(d.getDate() - d.getDay() + 8);
+              // od północy poniedziałku
+              from = new Date(d);
+              from.setHours(0,0,0,0);
+              to   = new Date(d);
+              to.setDate(to.getDate() + 6);
+              to.setHours(23,59,59,999);
+              break; }
+              
+            case 'nextweekend': { const d=new Date(now);
+                d.setDate(d.getDate()-d.getDay()+12);
+                from.setTime(d);
+                to=new Date(d);
+                to.setDate(to.getDate()+2);
+                to.setHours(23,59,59,999);
+              break; }
+              
+            case 'ended': from=new Date(2000,1,1);
+                to=new Date(now);
+                to.setHours(23,59,59,999);
+                eventsData = eventsData.filter(ev => new Date(ev['Data do']) < now);
+            break;
+            
+            case 'range': from=new Date(document.getElementById('dateFrom').value);
+                from.setHours(0,0,0,0);
+                to=new Date(document.getElementById('dateTo').value);
+                to.setHours(23,59,59,999); break;
           }
 
           if (f === 'cyclic') {
             // zachowujemy tylko te z niepustym Dzien_tygodnia
             eventsData = eventsData.filter(e => e['Dzien_tygodnia']);
           }
-          
+                    
           displayEvents(from, to);
         });
     }
@@ -385,11 +435,11 @@
     function displayEvents(startDate, endDate) {
       const now = new Date(), today = new Date(now); today.setHours(0,0,0,0);
       markers.forEach(m=>m.setMap(null)); markers=[];
-      const geocoder = new google.maps.Geocoder();
+      
       function fmtDate(s){ const d=new Date(s); return d.toISOString().replace(/-|:|\.\d{3}/g,''); }
 
       // --- przygotuj listę wydarzeń z przeliczonymi datami ---
-      const items = eventsData.map(ev => {
+      let items = eventsData.map(ev => {
         // 1) parsujemy oryginalne daty
         let s = new Date(ev['Data od']),
             e = new Date(ev['Data do']);
@@ -400,7 +450,7 @@
         };
         let dn = (ev['Dzien_tygodnia']||'').toLowerCase().trim();
         if (weekdayMap.hasOwnProperty(dn)) {
-          const base = new Date(today);
+          const base = new Date(startDate);
           base.setHours(0,0,0,0);
           const offset = (weekdayMap[dn] - base.getDay() + 7) % 7;
           const origS = new Date(s), origE = new Date(e);
@@ -423,81 +473,96 @@
       .sort((a,b) => b.s - a.s);
       
       // --- rysuj markery w tej kolejności ---
+      items = items.filter(({ev}) => ev['Coordinates'] && ev['Coordinates'].trim());
       items.forEach(({ev, s, e}, i) => {
-        geocoder.geocode({ address: ev.Adres }, (res, st) => {
-          if (st !== 'OK') return;
-          const pos = res[0].geometry.location;
-      
-          // wybór koloru jak dotąd
-          const diff = Math.floor((s - today)/(1000*60*60*24));
-          let col;
-          if (s <= today && e >= today)       col = 'red';
-          else if (diff === 0)                col = 'red';
-          else if (diff === 1)                col = 'orange';
-          else if (diff === 2)                col = 'yellow';
-          else if (diff > 2)                  col = 'green';
-          else                                 col = 'blue';
-      
-          // tworzenie markera (tak jak w 0.106)
-          const zIndexMap = { red: 5, orange: 4, yellow: 3, green: 2, blue: 1 };
+  // jeżeli brak Coordinates – pomiń
+  if (!ev['Coordinates']) return;
 
-          // zbudujmy tooltip (title) uwzględniając dzień tygodnia, jeśli jest
-          let tipTitle = `${ev.Nazwa}`;
-          if (ev['Dzien_tygodnia']) {
-            tipTitle += `\nMilonga cykliczna: ${ev['Dzien_tygodnia']}`;
-            tipTitle += `\nUpewnij się czy będzie!!!`;
-          }
-          tipTitle += `\n${s.toLocaleString()} – ${e.toLocaleString()}`;
-          
-          const marker = new google.maps.Marker({
-            map,
-            position: pos,
-            optimized: false,
-            zIndex:      zIndexMap[col],
-            icon:        { url: `https://maps.google.com/mapfiles/ms/icons/${col}-dot.png` },
-            //title:       `${ev.Nazwa}\n${ev['Data od']} – ${ev['Data do']}`
-            title:  tipTitle
-          });
-          markers.push(marker);
-      
-          const cs = s > now
-            ? `<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje + '\n' + ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`
-            : '';
-      
-          // przygotuj dodatkowe linie dla cyklicznych
-          let cycDetails = '';
-          if (ev['Dzien_tygodnia']) {
-            cycDetails = `
-              <p><strong>Milonga cykliczna:</strong> ${ev['Dzien_tygodnia']}</p>
-              <p class="pulse">Sprawdź u organizatora czy na pewno będzie!!!</p>
-            `;
-          }
-          
-          const content = `
-            <div style="font-family:'Arial Black', sans-serif;">
-              <h3>${ev.Nazwa}</h3>
-              <p><strong>Adres:</strong> ${ev.Adres}</p>
-              <p><strong>Od: </strong>${s.toLocaleString()}</p>
-              <p><strong>Do: </strong>${e.toLocaleString()}</p>
-              ${cycDetails}
-              <p><strong>Parkietowe: </strong>${ev.Parkietowe}</p>
-              <p><strong>Organizator: </strong>${ev.Organizator}</p>
-              <p><strong>TDJ: </strong>${ev.TDJ}</p>
-              <p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p>
-              <p><strong>Info: </strong>${ev.Informacje}</p>
-              <p><a href="${ev.Link}" target="_blank">Link</a></p>
-              <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>
-              ${cs}
-            </div>
-          `;
-      
-          const cleaned = content.replace(/undefined/g, 'b.d.');
-          const iw = new google.maps.InfoWindow({ content: cleaned });
-          marker.customInfo = cleaned;
-          oms.addMarker(marker);
-        });
-      });
-      
+  // parsuj "lat, lng" z pola Coordinates
+  const [lat, lng] = ev['Coordinates']
+    .split(',')
+    .map(str => parseFloat(str.trim()));
+  const pos = { lat, lng };
+
+    // przygotuj daty
+    const now = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const sDay = new Date(s); sDay.setHours(0,0,0,0);
+    const diff = Math.floor((sDay - today) / msPerDay);
+    
+    let col;
+    if (s <= now && e >= now) {
+      // 1) Event już trwa
+      col = 'red';
+    } else if (diff === 0) {
+      // 2) Event zaczyna się dzisiaj
+      col = 'red';
+    } else if (e < today) {
+      // 3) Zakończone
+      col = 'blue';
+    } else if (diff === 1) {
+      col = 'orange';   // jutro
+    } else if (diff === 2) {
+      col = 'yellow';   // pojutrze
+    } else {
+      col = 'green';    // pozostałe przyszłe
+    }
+        
+  const zIndexMap = { red:5, orange:4, yellow:3, green:2, blue:1 };
+
+  let tipTitle = `${ev.Nazwa}`;
+  if (ev['Dzien_tygodnia']) {
+    tipTitle += `\nMilonga cykliczna: ${ev['Dzien_tygodnia']}`;
+    tipTitle += `\nUpewnij się czy będzie!!!`;
+  }
+  tipTitle += `\n${s.toLocaleString()} – ${e.toLocaleString()}`;
+
+  const marker = new google.maps.Marker({
+    map,
+    position: pos,
+    optimized: false,
+    zIndex:      zIndexMap[col],
+    icon:        { url: `https://maps.google.com/mapfiles/ms/icons/${col}-dot.png` },
+    title:       tipTitle
+  });
+  markers.push(marker);
+
+  // (kopiuj dalej swój kod budujący InfoWindow z cleaned i oms.addMarker)
+  const cs = s > now
+    ? `<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje + '\n' + ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`
+    : '';
+
+  let cycDetails = '';
+  if (ev['Dzien_tygodnia']) {
+    cycDetails = `
+      <p><strong>Milonga cykliczna:</strong> ${ev['Dzien_tygodnia']}</p>
+      <p class="pulse">Sprawdź u organizatora czy na pewno będzie!!!</p>
+    `;
+  }
+
+  const content = `
+    <div style="font-family:'Arial Black', sans-serif;">
+      <h3>${ev.Nazwa}</h3>
+      <p><strong>Adres:</strong> ${ev.Adres}</p>
+      <p><strong>Od: </strong>${s.toLocaleString()}</p>
+      <p><strong>Do: </strong>${e.toLocaleString()}</p>
+      ${cycDetails}
+      <p><strong>Parkietowe: </strong>${ev.Parkietowe}</p>
+      <p><strong>Organizator: </strong>${ev.Organizator}</p>
+      <p><strong>TDJ: </strong>${ev.TDJ}</p>
+      <p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p>
+      <p><strong>Info: </strong>${ev.Informacje}</p>
+      <p><a href="${ev.Link}" target="_blank">Link</a></p>
+      <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>
+      ${cs}
+    </div>
+  `;
+  const cleaned = content.replace(/undefined/g, 'b.d.');
+  const iw = new google.maps.InfoWindow({ content: cleaned });
+  marker.customInfo = cleaned;
+  oms.addMarker(marker);
+});
+
 
       
     }
