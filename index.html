@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
-  <title>Mapa milong</title>
+  <title>WhereMilonga</title>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=1">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
  
   <style>
@@ -23,7 +28,7 @@
     .custom-button {
         background-color: lightgray;
         border-radius: 8px;
-        padding: 6px 10px;
+        padding: 2px 6px;
         border: 2px solid #888;
         font-family: 'Arial Black', sans-serif;
         cursor: pointer;
@@ -175,7 +180,31 @@
       max-width: 80%;
       max-height: 80%;
     }
-    
+
+    /* Komunikat nawigacyjny (toast) dla przycisków »« ‹› */
+    #navToast {
+      display: none;
+      position: fixed;
+      bottom: 120px;            /* nad legendą */
+      left: 50%;
+      transform: translateX(-50%);
+      background: lightgray;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #888;
+      font-family: 'Arial Black', sans-serif;
+      font-size: 10px;
+      z-index: 1001;
+    }
+    #navToast button {
+      margin-left: 8px;
+      padding: 4px 8px;
+      border: 1px solid #888;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
@@ -184,14 +213,25 @@
     <img src="ikona_512v2.png" alt="Splash">
   </div>
   
-  <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; gap: 12px; align-items: center;">
+  <div style="position: absolute; top: 60px; left: 10px; z-index: 10; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
     
-    <button onclick="openFilterModal()" class="custom-button">Filtruj</button>
-    <div id="selectedFilter">Wybrano: najbliższe 3 dni</div>
+    <!-- wiersz: Filtruj + Wybrano obok siebie -->
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="filterBtn" class="custom-button">Filtruj</button>
+      <div id="selectedFilter">Wybrano: najbliższe 3 dni</div>
+    </div>
+    
+    <!-- poniżej zostaje wiersz: pole + Szukaj -->
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <input type="text" id="searchBox" placeholder="Wpisz szukany tekst"
+             style="padding: 2px 6px; border: 1px solid #888; border-radius: 4px;">
+      <button id="searchBtn" class="custom-button" style="padding: 2px 8px;">Szukaj</button>
+    </div>
+
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.160)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.181)</div>
 
   <div class="info-panel" id="emailPanel" style="left: 250px;">
   
@@ -210,8 +250,7 @@
   <div class="info-panel" id="qrPanel" style="bottom: 52px; left: 280px;">
     QR
   </div>
-    
-</div>
+  
   
   <div class="legend">
     <div><img class="legend-icon" src="https://maps.google.com/mapfiles/ms/icons/red-dot.png"> Dzisiaj</div>
@@ -233,7 +272,13 @@
     <button id="contactYes">Tak</button>
     <button id="contactNo">Nie</button>
   </div>
-  
+
+  <!-- Prosty komunikat (toast) dla przycisków nawigacji -->
+  <div id="navToast" style="display:none; position:fixed; bottom:120px; left:50%; transform:translateX(-50%); background:lightgray; padding:8px 12px; border-radius:8px; border:1px solid #888; font-family:'Arial Black', sans-serif; font-size:10px; z-index:1001;">
+    <span id="navToastText"></span>
+    <button id="navToastClose" style="margin-left:8px; padding:4px 8px; border:1px solid #888; border-radius:4px; background:white; cursor:pointer;">Zamknij</button>
+  </div>
+
 
   <!-- Modal filtrów -->
   <div id="filterModal" style="display:none; position:fixed; top:50px; left:50%; transform:translateX(-50%, -50%); background:lightgray; padding:20px; border:1px solid #ccc; z-index:1000; border-radius:8px;">
@@ -258,6 +303,15 @@
     <button onclick="applyFilter()">Filtruj</button>
   </div>
 
+  <!-- Modal komunikatu (np. Brak wyników) -->
+  <div id="msgModal" style="display:none;
+      position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+      background: lightgray; padding: 16px 20px; border:1px solid #ccc;
+      border-radius:8px; z-index:2001; text-align:center; font-family:'Arial Black', sans-serif; font-size:12px;">
+    <div id="msgText" style="margin-bottom:12px;">Komunikat</div>
+    <button id="msgOk" class="custom-button" style="padding:2px 10px;">OK</button>
+  </div>
+  
   <!-- Modal Ustawień -->
   <div id="settingsModal" style="display:none;
       position:fixed;
@@ -292,7 +346,7 @@
   </div>
 
   <script>
-    let map, oms, markers = [], eventsData = [], nightMode = false;
+    let map, oms, markers = [], eventsData = [], nightMode = false, currentMarker = null, infoWindow = null, selectedFilterBase = '', initialCenter = null, initialZoom = null;
 
     function initMap() {
       map = new google.maps.Map(document.getElementById('map'), { zoom: 10, center: { lat: 52.1, lng: 19.4 } });
@@ -303,9 +357,55 @@
       });
       const spiderInfo = new google.maps.InfoWindow();
       oms.addListener('click', function(marker) {
-        spiderInfo.setContent(marker.customInfo);
+        currentMarker = marker; // zapamiętaj, który marker ma otwarte InfoWindow
+        const html = (marker.infoPages && marker.infoPages.length)
+                     ? marker.infoPages[marker.customIndex || 0]
+                     : marker.customInfo; // fallback na dawny content
+        spiderInfo.setContent(html);
         spiderInfo.open(map, marker);
       });
+
+      // Po wyrenderowaniu treści InfoWindow – podłącz nawigację
+      google.maps.event.addListener(spiderInfo, 'domready', function () {
+        if (!currentMarker || !currentMarker.infoPages) return;
+      
+        const len = currentMarker.infoPages.length;
+      
+        const byId = id => document.getElementById(id);
+        const setPage = (idx) => {
+          if (idx < 0 || idx >= len) return;
+          currentMarker.customIndex = idx;
+          spiderInfo.setContent(currentMarker.infoPages[idx]); // podmień całą treść
+        };
+      
+        const firstBtn = byId('firstEventBtn');
+        const prevBtn  = byId('prevEventBtn');
+        const nextBtn  = byId('nextEventBtn');
+        const lastBtn  = byId('lastEventBtn');
+      
+        if (firstBtn) firstBtn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (currentMarker.customIndex !== 0) setPage(0);
+        });
+      
+        if (prevBtn) prevBtn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const i = currentMarker.customIndex;
+          if (i > 0) setPage(i - 1);
+        });
+      
+        if (nextBtn) nextBtn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const i = currentMarker.customIndex;
+          if (i < len - 1) setPage(i + 1);
+        });
+      
+        if (lastBtn) lastBtn.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (currentMarker.customIndex !== len - 1) setPage(len - 1);
+        });
+      });
+      
       loadData();
     }
 
@@ -333,6 +433,19 @@
     function toggleDateInputs() { document.getElementById('dateInputs').style.display = document.getElementById('filterSelect').value === 'range' ? 'block' : 'none'; }
 
     function applyFilter() {
+
+        // ➊ Jednorazowo zapisz widok początkowy mapy (center + zoom)
+        if (!initialCenter && map) {
+          const c = map.getCenter();
+          initialCenter = { lat: c.lat(), lng: c.lng() };
+          initialZoom   = map.getZoom();
+        }
+      
+        // ➋ Czyść pole wyszukiwania przy każdym zatwierdzeniu filtra
+        const box = document.getElementById('searchBox');
+        if (box) box.value = '';
+
+      
       fetch('https://opensheet.elk.sh/1_6bzYSjQZac-QkAytaJD0D81YXcFSOe72Su024smcl0/Arkusz1')
         .then(res => res.json())
         .then(data => {
@@ -341,8 +454,16 @@
 
           const f = document.getElementById('filterSelect').value;
           const labels = { all:'bieżące i przyszłe', cyclic: 'cykliczne', today:'dzisiaj', next3days:'najbliższe 3 dni', week:'ten tydzień', weekend:'ten weekend', nextweek:'następny tydzień', nextweekend:'następny weekend', ended:'zakończone' };
-          document.getElementById('selectedFilter').textContent = 'Wybrano: ' + (labels[f] || (f==='range'?`zakres od ${document.getElementById('dateFrom').value} do ${document.getElementById('dateTo').value}`:'wszystkie'));
+          const sel = document.getElementById('selectedFilter');
+          sel.textContent = 'Wybrano: ' + (labels[f] || (f === 'range'
+            ? `zakres od ${document.getElementById('dateFrom').value} do ${document.getElementById('dateTo').value}`
+            : 'wszystkie'));
+          selectedFilterBase = sel.textContent; // zapamiętaj „bazę” dla dopisek „zawierające: …”
           document.getElementById('filterModal').style.display = 'none';
+
+          const sb = document.getElementById('searchBox');
+          if (sb) sb.value = '';   // wyczyść pole wyszukiwania po filtrowaniu
+
 
           const now = new Date();
           let from = new Date(now), to = new Date(now);
@@ -429,10 +550,22 @@
           }
                     
           displayEvents(from, to);
+
+            // ➌ Po zastosowaniu filtra przywróć widok mapy z pierwszego uruchomienia
+            if (initialCenter && typeof initialZoom === 'number') {
+              map.setCenter(initialCenter);
+              map.setZoom(initialZoom);
+            }
+
         });
     }
 
     function displayEvents(startDate, endDate) {
+
+      // usuń stare markery
+      markers.forEach(m => m.setMap(null));
+      markers = [];
+      
       const now = new Date(), today = new Date(now); today.setHours(0,0,0,0);
       markers.forEach(m=>m.setMap(null)); markers=[];
       
@@ -445,26 +578,55 @@
             e = new Date(ev['Data do']);
         // 2) recalc dla Dzien_tygodnia
         const weekdayMap = {
-          niedziela:0, poniedziałek:1, wtorek:2,
-          środa:3, czwartek:4, piątek:5, sobota:6
-        };
-        let dn = (ev['Dzien_tygodnia']||'').toLowerCase().trim();
-        if (weekdayMap.hasOwnProperty(dn)) {
-          const base = new Date(startDate);
-          base.setHours(0,0,0,0);
-          const offset = (weekdayMap[dn] - base.getDay() + 7) % 7;
-          const origS = new Date(s), origE = new Date(e);
-          const newS = new Date(base);
-          newS.setDate(base.getDate() + offset);
-          newS.setHours(origS.getHours(), origS.getMinutes(), origS.getSeconds(), origS.getMilliseconds());
-          const sd = new Date(origS); sd.setHours(0,0,0,0);
-          const ed = new Date(origE); ed.setHours(0,0,0,0);
-          const dayDiff = Math.round((ed - sd)/(1000*60*60*24));
-          const newE = new Date(newS);
-          newE.setDate(newS.getDate() + dayDiff);
-          newE.setHours(origE.getHours(), origE.getMinutes(), origE.getSeconds(), origE.getMilliseconds());
-          s = newS; e = newE;
-        }
+  niedziela:0, poniedziałek:1, wtorek:2,
+  środa:3, czwartek:4, piątek:5, sobota:6
+}; 
+let dn = (ev['Dzien_tygodnia']||'').toLowerCase().trim();
+if (weekdayMap.hasOwnProperty(dn)) {
+  const base = new Date(startDate);
+  base.setHours(0,0,0,0);
+  const origS = new Date(s), origE = new Date(e);
+
+  // parsujemy wykluczenia
+  let excluded = [];
+  if (ev['Wyklucz']) {
+    const parts = ev['Wyklucz'].split(', ');
+    for (const p of parts) {
+      if (p.includes('|')) {
+        const [ds, de] = p.split('|').map(d => new Date(d));
+        if (!isNaN(ds) && !isNaN(de)) excluded.push({ from: ds, to: de });
+      } else {
+        const d = new Date(p);
+        if (!isNaN(d)) excluded.push({ from: d, to: d });
+      }
+    }
+  }
+
+  // szukamy pierwszej dozwolonej daty zgodnej z dniem tygodnia
+  let found = false;
+  let testDate = new Date(base);
+  testDate.setHours(0,0,0,0);
+  while (testDate <= endDate) {
+    if (testDate.getDay() === weekdayMap[dn]) {
+      const isExcluded = excluded.some(({from, to}) => testDate >= from && testDate <= to);
+      if (!isExcluded) {
+        // to jest dozwolona data
+        const newS = new Date(testDate);
+        newS.setHours(origS.getHours(), origS.getMinutes(), origS.getSeconds(), origS.getMilliseconds());
+        const dayDiff = Math.round((origE - origS)/(1000*60*60*24));
+        const newE = new Date(newS);
+        newE.setDate(newS.getDate() + dayDiff);
+        newE.setHours(origE.getHours(), origE.getMinutes(), origE.getSeconds(), origE.getMilliseconds());
+        s = newS; e = newE;
+        found = true;
+        break;
+      }
+    }
+    testDate.setDate(testDate.getDate() + 1);
+  }
+
+  if (!found) return null; // nie znaleziono dozwolonej daty – pomiń wydarzenie
+}
         return { ev, s, e };
       })
       // 3) filtruj wg przedziału
@@ -474,111 +636,274 @@
       
       // --- rysuj markery w tej kolejności ---
       items = items.filter(({ev}) => ev['Coordinates'] && ev['Coordinates'].trim());
-      items.forEach(({ev, s, e}, i) => {
-  // jeżeli brak Coordinates – pomiń
-  if (!ev['Coordinates']) return;
-
-  // parsuj "lat, lng" z pola Coordinates
-  const [lat, lng] = ev['Coordinates']
-    .split(',')
-    .map(str => parseFloat(str.trim()));
-  const pos = { lat, lng };
-
-    // przygotuj daty
-    const now = new Date();
-    const msPerDay = 1000 * 60 * 60 * 24;
-    const sDay = new Date(s); sDay.setHours(0,0,0,0);
-    const diff = Math.floor((sDay - today) / msPerDay);
-    
-    let col;
-    if (s <= now && e >= now) {
-      // 1) Event już trwa
-      col = 'red';
-    } else if (diff === 0) {
-      // 2) Event zaczyna się dzisiaj
-      col = 'red';
-    } else if (e < today) {
-      // 3) Zakończone
-      col = 'blue';
-    } else if (diff === 1) {
-      col = 'orange';   // jutro
-    } else if (diff === 2) {
-      col = 'yellow';   // pojutrze
-    } else {
-      col = 'green';    // pozostałe przyszłe
-    }
-        
-  const zIndexMap = { red:5, orange:4, yellow:3, green:2, blue:1 };
-
-  let tipTitle = `${ev.Nazwa}`;
-  if (ev['Dzien_tygodnia']) {
-    tipTitle += `\nMilonga cykliczna: ${ev['Dzien_tygodnia']}`;
-    tipTitle += `\nUpewnij się czy będzie!!!`;
-  }
-  tipTitle += `\n${s.toLocaleString()} – ${e.toLocaleString()}`;
-
-  const marker = new google.maps.Marker({
-    map,
-    position: pos,
-    optimized: false,
-    zIndex:      zIndexMap[col],
-    icon:        { url: `https://maps.google.com/mapfiles/ms/icons/${col}-dot.png` },
-    title:       tipTitle
-  });
-  markers.push(marker);
-
-  // (kopiuj dalej swój kod budujący InfoWindow z cleaned i oms.addMarker)
-  const cs = s > now
-    ? `<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje + '\n' + ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`
-    : '';
-
-  let cycDetails = '';
-  if (ev['Dzien_tygodnia']) {
-    cycDetails = `
-      <p><strong>Milonga cykliczna:</strong> ${ev['Dzien_tygodnia']}</p>
-      <p class="pulse">Sprawdź u organizatora czy na pewno będzie!!!</p>
-    `;
-  }
-
-  const content = `
-    <div style="font-family:'Arial Black', sans-serif;">
-      <h3>${ev.Nazwa}</h3>
-      <p><strong>Adres:</strong> ${ev.Adres}</p>
-      <p><strong>Od: </strong>${s.toLocaleString()}</p>
-      <p><strong>Do: </strong>${e.toLocaleString()}</p>
-      ${cycDetails}
-      <p><strong>Parkietowe: </strong>${ev.Parkietowe}</p>
-      <p><strong>Organizator: </strong>${ev.Organizator}</p>
-      <p><strong>TDJ: </strong>${ev.TDJ}</p>
-      <p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p>
-      <p><strong>Info: </strong>${ev.Informacje}</p>
-      <p><a href="${ev.Link}" target="_blank">Link</a></p>
-      <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>
-      ${cs}
-    </div>
-  `;
-  const cleaned = content.replace(/undefined/g, 'b.d.');
-  const iw = new google.maps.InfoWindow({ content: cleaned });
-  marker.customInfo = cleaned;
-  oms.addMarker(marker);
-});
-
-
       
+      // grupujemy wydarzenia po współrzędnych
+      const groupedByCoords = {}; 
+
+      items.forEach(item => {
+        const coord = item.ev.Coordinates?.trim();
+        if (!coord) return;
+      
+        if (!groupedByCoords[coord]) {
+          groupedByCoords[coord] = [];
+        }
+        groupedByCoords[coord].push(item);
+      });
+
+      for (const coord in groupedByCoords) {
+        groupedByCoords[coord].sort((a, b) => a.s - b.s);
+      }
+
+      for (const coord in groupedByCoords) {
+        const group = groupedByCoords[coord];
+        const first = group[0];        // najbliższe wydarzenie
+        // pomocnicze (kolor znacznika wg najbliższego wydarzenia)
+        const ev0 = first.ev;
+        const s0  = first.s;
+        const e0  = first.e;
+        
+        const [lat, lng] = coord.split(',').map(str => parseFloat(str.trim()));
+        const pos = { lat, lng };
+        
+        const now2 = new Date();
+        const today2 = new Date(now2); today2.setHours(0,0,0,0);
+        const sDay = new Date(s0); sDay.setHours(0,0,0,0);
+        const diff = Math.floor((sDay - today2) / (1000 * 60 * 60 * 24));
+        
+        let col;
+        if (s0 <= now2 && e0 >= now2) {
+          col = 'red';
+        } else if (diff === 0) {
+          col = 'red';
+        } else if (e0 < today2) {
+          col = 'blue';
+        } else if (diff === 1) {
+          col = 'orange';
+        } else if (diff === 2) {
+          col = 'yellow';
+        } else {
+          col = 'green';
+        }
+        
+        const zIndexMap = { red:5, orange:4, yellow:3, green:2, blue:1 };
+        
+        // HTML tooltipa (podpowiedzi) — zostaje jak był
+        const formatTooltipDate = (s, e) => {
+          const pad = n => n.toString().padStart(2, '0');
+          const fmt = d => `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          if (s.toDateString() === e.toDateString()) {
+            return `${fmt(s).slice(0, 10)} ${pad(s.getHours())}:${pad(s.getMinutes())}-${pad(e.getHours())}:${pad(e.getMinutes())}`;
+          } else {
+            return `${fmt(s)} - ${fmt(e)}`;
+          }
+        };
+        let tooltipTitle;
+        if (group.length === 1) {
+          tooltipTitle = `${ev0.Nazwa}\n${formatTooltipDate(s0, e0)}`;
+        } else {
+          tooltipTitle = `${ev0.Nazwa} (pierwsze z ${group.length} wydarzeń)\n${formatTooltipDate(s0, e0)}`;
+        }
+        const dn0 = (ev0['Dzien_tygodnia'] || '').trim();
+        if (dn0 && (group.length === 1 || group[0] === ev0)) {
+          tooltipTitle += `\nWydarzenie cykliczne, upewnij się, że będzie!`;
+        }
+        
+        // --- Funkcja renderująca JEDNĄ stronę okienka dla podanego elementu grupy ---
+        function renderContent(item, idx) {
+          const ev = item.ev;
+          const s  = item.s;
+          const e  = item.e;
+        
+          const cs = s > new Date()
+            ? `<p><a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.Nazwa)}&dates=${fmtDate(ev['Data od'])}/${fmtDate(ev['Data do'])}&details=${encodeURIComponent(ev.Informacje + '\n' + ev.Link)}&location=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Dodaj do kalendarza</button></a></p>`
+            : '';
+        
+          let cycDetails = '';
+          if (ev['Dzien_tygodnia']) {
+            cycDetails = `
+              <p><strong>Milonga cykliczna:</strong> ${ev['Dzien_tygodnia']}</p>
+              <p class="pulse">Sprawdź u organizatora czy na pewno będzie!!!</p>
+            `;
+          }
+        
+          const html = `
+            <div style="font-family:'Arial Black', sans-serif;">
+              <h3>${ev.Nazwa}</h3>
+              <p><strong>Adres:</strong> ${ev.Adres}</p>
+              <p><strong>Od: </strong>${s.toLocaleString()}</p>
+              <p><strong>Do: </strong>${e.toLocaleString()}</p>
+              ${cycDetails}
+              <p><strong>Parkietowe: </strong>${ev.Parkietowe}</p>
+              <p><strong>Organizator: </strong>${ev.Organizator}</p>
+              <p><strong>TDJ: </strong>${ev.TDJ}</p>
+              <p><strong>Typ muzyki: </strong>${ev['Typ muzyki']}</p>
+              <p><strong>Info: </strong>${ev.Informacje}</p>
+              <p><a href="${ev.Link}" target="_blank">Link</a></p>
+              <p><a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ev.Adres)}" target="_blank"><button>Trasa</button></a></p>
+              ${cs}
+        
+              <div style="
+                margin-top: 10px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-weight: bold;
+                font-family: 'Arial Black', sans-serif;
+                font-size: 10px;">
+                
+                <span>Wydarzeń pod tym adresem:</span>
+                <input type="text" id="eventCounter"
+                       value="${group.length}"
+                       readonly
+                       style="width: 30px;
+                              text-align: left;
+                              background-color: white;
+                              border: none;
+                              font-weight: bold;">
+        
+                <button id="firstEventBtn" style="padding: 2px 6px;">&laquo;</button>
+                <button id="prevEventBtn"  style="padding: 2px 6px;">&lsaquo;</button>
+        
+                <input type="text" id="eventCurrent"
+                       value="${idx+1}"
+                       readonly
+                       style="width: 30px;
+                              text-align: center;
+                              background-color: white;
+                              border: 1px solid #888;
+                              border-radius: 4px;
+                              font-weight: bold;">
+                              
+                <button id="nextEventBtn"  style="padding: 2px 6px;">&rsaquo;</button>
+                <button id="lastEventBtn"  style="padding: 2px 6px;">&raquo;</button>
+              </div>
+            </div>
+          `;
+        
+          return html.replace(/undefined/g, 'b.d.');
+        }
+        
+        // --- Zbuduj wszystkie strony okienka dla tej grupy ---
+        const infoPages = group.map((item, idx) => renderContent(item, idx));
+        
+        // --- Utwórz marker i podłącz do OMS ---
+        const marker = new google.maps.Marker({
+          map,
+          position: pos,
+          optimized: false,
+          zIndex:    zIndexMap[col],
+          icon:      { url: `https://maps.google.com/mapfiles/ms/icons/${col}-dot.png` },
+          title:     tooltipTitle
+        });
+        
+        // stan nawigacji dla markera
+        marker.customIndex = 0;           // start od 1. wydarzenia (indeks 0)
+        marker.infoPages   = infoPages;   // wszystkie „ekrany” okienka
+        marker.customInfo  = infoPages[0];// zgodność wsteczna
+
+        // ↓↓↓ DODANE: treść do wyszukiwania + (opcjonalnie) surowa grupa
+        marker.searchText = group
+          .map(({ev}) => `${ev.Nazwa || ''} ${ev.Adres || ''}`)
+          .join(' ')
+          .toLowerCase();
+        
+        marker.groupData = group; // nie jest wymagane w tej wersji, ale przyda się w przyszłości
+        
+        oms.addMarker(marker);
+        markers.push(marker);
+
+        
+      }
     }
 
-    document.addEventListener('DOMContentLoaded',()=>{
-      const panel=document.querySelector('.info-panel');
-      const tip=document.getElementById('contactTooltip');
-      const yes=document.getElementById('contactYes');
-      const no=document.getElementById('contactNo');
+    document.addEventListener('DOMContentLoaded', () => {
+      const panel = document.querySelector('.info-panel');
+      const tip   = document.getElementById('contactTooltip');
+      const yes   = document.getElementById('contactYes');
+      const no    = document.getElementById('contactNo');
       panel.addEventListener('click',()=>tip.style.display=tip.style.display==='block'?'none':'block');
       yes.addEventListener('click',e=>{e.stopPropagation();tip.style.display='none';window.open('https://m.me/tdj.hypno.piotr.smolen','_blank');});
       no.addEventListener('click', e=>{e.stopPropagation();tip.style.display='none';});
       document.addEventListener('click', e=>{if(!panel.contains(e.target)&&!tip.contains(e.target))tip.style.display='none';});
+    
+      // ↓↓↓ DODANE: nasłuchy dla „Filtruj” i „Szukaj” (bez dodatkowych <script>)
+      const filterBtn = document.getElementById('filterBtn');
+      if (filterBtn) filterBtn.addEventListener('click', () => openFilterModal());
+    
+      const searchBtn = document.getElementById('searchBtn');
+      if (searchBtn) {
+        const runSearch = () => {
+          const box  = document.getElementById('searchBox');
+          const qRaw = (box?.value || '').trim();
+          const q    = qRaw.toLowerCase();
+      
+          // 2) Pusty wzorzec ⇒ po prostu zastosuj bieżące filtrowanie (reset widoku)
+          if (qRaw.length === 0) {
+            applyFilter();
+            return;
+          }
+      
+          // Zbyt krótki wzorzec ⇒ komunikat, bez zmian UI
+          if (q.length < 3) {
+            window.showNavToast ? showNavToast('Wpisz min. 3 znaki') : alert('Wpisz min. 3 znaki');
+            return;
+          }
+      
+          // Szukamy po pre-zbudowanym tekście markera (Nazwa + Adres dla całej grupy)
+          // bierzemy pod uwagę tylko markery, które są aktualnie na mapie (po filtrze)
+          const hits = markers.filter(m => m.getMap() && (m.searchText || '').includes(q));
+
+      
+          // Brak wyników ⇒ komunikat i brak zmian na mapie/tekście
+          if (!hits.length) {
+            /* window.showNavToast ? showNavToast('Brak wyników') : alert('Brak wyników'); */
+            showMessage('Brak wyników');
+            return;
+          }
+      
+          // 1) Pokaż TYLKO trafienia
+          markers.forEach(m => m.setMap(null));
+          hits.forEach(m => m.setMap(map));
+      
+          // 2) Dopasuj widok
+          const bounds = new google.maps.LatLngBounds();
+          hits.forEach(m => bounds.extend(m.getPosition()));
+          map.fitBounds(bounds);
+      
+          // 3) Dopisz do „Wybrano: …” informację o wyszukiwaniu
+          const sel = document.getElementById('selectedFilter');
+          sel.textContent = `${selectedFilterBase}, zawierające: ${qRaw} (znaleziono ${hits.length})`;
+        };
+      
+        searchBtn.addEventListener('click', runSearch);
+      
+        // Enter w polu też uruchamia wyszukiwanie
+        const searchBox = document.getElementById('searchBox');
+        if (searchBox) searchBox.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') runSearch();
+        });
+      }
+
     });
 
+    function showMessage(msg) {
+      const m = document.getElementById('msgModal');
+      const t = document.getElementById('msgText');
+      if (!m || !t) return;
+      t.textContent = msg;
+      m.style.display = 'block';
+    }
+    function hideMessage() {
+      const m = document.getElementById('msgModal');
+      if (m) m.style.display = 'none';
+    }
+    document.getElementById('msgOk')?.addEventListener('click', hideMessage);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideMessage(); });
+
+    
+    // i dopiero potem przypięcie callbacka Google:
     window.initMap = initMap;
+    
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
  
@@ -731,6 +1056,26 @@
         const s = document.getElementById('splash');
         if (s) s.style.display = 'none';
       }, 3000);
+    });
+  </script>
+
+  <script>
+    // Prosta obsługa komunikatu (toast) – bezpieczna inicjalizacja po DOMContentLoaded
+    window.addEventListener('DOMContentLoaded', () => {
+      const box   = document.getElementById('navToast');
+      const text  = document.getElementById('navToastText');
+      const close = document.getElementById('navToastClose');
+      if (!box || !text || !close) return; // brak elementów – nic nie rób
+  
+      window.showNavToast = function (msg) {
+        text.textContent = msg;
+        box.style.display = 'block';
+      };
+  
+      close.addEventListener('click', (e) => {
+        e.stopPropagation();
+        box.style.display = 'none';
+      });
     });
   </script>
   
