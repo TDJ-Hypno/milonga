@@ -231,7 +231,7 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.182)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.183)</div>
 
   <div class="info-panel" id="emailPanel" style="left: 250px;">
   
@@ -479,9 +479,9 @@
                 // od dziś 00:00
                 const start = new Date(now);
                 start.setHours(0, 0, 0, 0);
-                // do za 6 dni 23:59:59
+                
                 const end = new Date(start);
-                end.setDate(end.getDate() + 6);
+                end.setDate(end.getDate() + 90);
                 end.setHours(23, 59, 59, 999);
                 from = start;
                 to   = end;
@@ -587,17 +587,33 @@ if (weekdayMap.hasOwnProperty(dn)) {
   base.setHours(0,0,0,0);
   const origS = new Date(s), origE = new Date(e);
 
-  // parsujemy wykluczenia
+  // parsujemy wykluczenia (lokalnie, bez pułapki UTC; obsługa , z/bez spacji i zakresów z |)
+  const parseYMDLocal = (str) => {
+    const [y, m, d] = str.trim().split(/[\.\-\/]/).map(n => parseInt(n, 10));
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d); // lokalna północ
+  };
+  
   let excluded = [];
-  if (ev['Wyklucz']) {
-    const parts = ev['Wyklucz'].split(', ');
-    for (const p of parts) {
-      if (p.includes('|')) {
-        const [ds, de] = p.split('|').map(d => new Date(d));
-        if (!isNaN(ds) && !isNaN(de)) excluded.push({ from: ds, to: de });
+  const rawEx = (ev['Wyklucz'] || '').trim();
+  if (rawEx) {
+    const parts = rawEx.split(/\s*,\s*/); // dzielenie po przecinku z opcjonalnymi spacjami
+    for (const part of parts) {
+      if (!part) continue;
+      if (part.includes('|')) {
+        const [a, b] = part.split('|').map(parseYMDLocal);
+        if (a && b) {
+          const from = new Date(a); from.setHours(0, 0, 0, 0);
+          const to   = new Date(b); to.setHours(23, 59, 59, 999);
+          excluded.push({ from, to });
+        }
       } else {
-        const d = new Date(p);
-        if (!isNaN(d)) excluded.push({ from: d, to: d });
+        const d = parseYMDLocal(part);
+        if (d) {
+          const from = new Date(d); from.setHours(0, 0, 0, 0);
+          const to   = new Date(d); to.setHours(23, 59, 59, 999);
+          excluded.push({ from, to });
+        }
       }
     }
   }
@@ -629,8 +645,8 @@ if (weekdayMap.hasOwnProperty(dn)) {
 }
         return { ev, s, e };
       })
-      .filter(Boolean)
       // 3) filtruj wg przedziału
+      .filter(Boolean)
       .filter(({s,e}) => !(s > endDate || e < startDate))
       // 4) sortuj malejąco po s → najdalsze jako pierwsze
       .sort((a,b) => b.s - a.s);
