@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100mm"
+   height="20mm"
+   viewBox="0 0 100 20"
+   version="1.1"
+   id="svg864"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="dodaj.svg">
+  <defs
+     id="defs858" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="251.2524"
+     inkscape:cy="236.95832"
+     inkscape:document-units="mm"
+     inkscape:current-layer="g939-4"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     inkscape:window-width="2202"
+     inkscape:window-height="1712"
+     inkscape:window-x="617"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata861">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Warstwa 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-88.427894,-126.12819)">
+    <g
+       id="g939-4"
+       transform="matrix(0.89796564,0,0,0.89796564,-18.261302,29.03659)">
+      <text
+         id="text914"
+         y="125.44418"
+         x="125.23415"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.2774px;line-height:1.25;font-family:'Berlin Sans FB';-inkscape-font-specification:'Berlin Sans FB, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.556936"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:22.2774px;font-family:'Berlin Sans FB';-inkscape-font-specification:'Berlin Sans FB, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.556936"
+           y="125.44418"
+           x="125.23415"
+           id="tspan912"
+           sodipodi:role="line">+Milonga</tspan></text>
+    </g>
+  </g>
+</svg>
