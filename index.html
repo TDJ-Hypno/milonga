@@ -51,6 +51,7 @@
     #emailPanel {
       display: inline-flex;
       align-items: center;
+      gap: 6px;  
     }
     
     .visit-panel {
@@ -85,6 +86,13 @@
         width: 16px;
         height: 16px;
     }
+
+    #emailPanel .legend-icon {
+      width: 56px;      /* ustaw pożądaną szerokość, np. 28–36 px */
+      height: auto;     /* proporcje zachowane */
+      display: block;
+    }
+
     
     #contactTooltip {
       display: none;
@@ -205,6 +213,29 @@
       cursor: pointer;
     }
 
+    /* --- formularz zgłoszenia --- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+    .form-row { display: flex; flex-direction: column; gap: 4px; }
+    .form-row input, .form-row select, .form-row textarea {
+      padding: 4px 6px; border:1px solid #888; border-radius:4px; font-size:12px;
+    }
+    .form-row a.hint { text-decoration: underline; color: #000; cursor: pointer; }
+    @media (max-width: 520px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    /* para: Data + Godzina obok siebie */
+    .form-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+
+    
   </style>
 </head>
 <body>
@@ -231,12 +262,10 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.183)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.190)</div>
 
-  <div class="info-panel" id="emailPanel" style="left: 250px;">
-  
-    
-    <img class="legend-icon" src="koperta.svg" alt="koperta">
+  <div class="info-panel" id="emailPanel" style="left: 250px;" onclick="window.openSubmitModal && window.openSubmitModal();">    
+    <img class="legend-icon" src="dodaj.svg" alt="Dodaj wydarzenie">
   </div>
   
   <div class="visit-panel">
@@ -310,6 +339,132 @@
       border-radius:8px; z-index:2001; text-align:center; font-family:'Arial Black', sans-serif; font-size:12px;">
     <div id="msgText" style="margin-bottom:12px;">Komunikat</div>
     <button id="msgOk" class="custom-button" style="padding:2px 10px;">OK</button>
+  </div>
+
+  <!-- Modal zgłaszania wydarzenia -->
+  <div id="submitModal" style="display:none;
+        position:fixed; top:60px; left:50%; transform:translateX(-50%);
+        background: lightgray; padding:16px; border:1px solid #ccc;
+        border-radius:8px; z-index:2002; width:min(92vw, 520px); font-size:12px;">
+  
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 style="margin:0;">Zgłoś wydarzenie</h3>
+      <button id="submitCloseBtn" class="custom-button" style="padding:0 8px;">×</button>
+    </div>
+  
+    <div class="form-grid">
+      <!-- 1. Nazwa wydarzenia -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="Nazwa wydarzenia">Nazwa wydarzenia</a>
+        <input id="f_name" type="text" placeholder="np. Milonga XYZ">
+      </label>
+  
+      <!-- 2. Adres -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="Adres">Adres</a>
+        <input id="f_addr" type="text" placeholder="ulica, miasto">
+      </label>
+  
+      <!-- 3. Dzień tygodnia -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="Dzień tygodnia">Dzień tygodnia</a>
+        <select id="f_dow">
+          <option value="">— brak / jednorazowe —</option>
+          <option>poniedziałek</option>
+          <option>wtorek</option>
+          <option>środa</option>
+          <option>czwartek</option>
+          <option>piątek</option>
+          <option>sobota</option>
+          <option>niedziela</option>
+        </select>
+      </label>
+  
+      <!-- OD: Data + Godzina w jednym wierszu -->
+      <div class="form-pair">
+        <label class="form-row">
+          <a href="#" class="hint" data-name="Data od">Data od</a>
+          <input id="f_from_d" type="date">
+        </label>
+      
+        <label class="form-row">
+          <a href="#" class="hint" data-name="Godzina od">Godzina od</a>
+          <div style="display:flex; gap:6px;">
+            <select id="f_from_h"></select>
+            <select id="f_from_m"></select>
+          </div>
+        </label>
+      </div>
+      
+      <!-- DO: Data + Godzina w jednym wierszu -->
+      <div class="form-pair">
+        <label class="form-row">
+          <a href="#" class="hint" data-name="Data do">Data do</a>
+          <input id="f_to_d" type="date">
+        </label>
+      
+        <label class="form-row">
+          <a href="#" class="hint" data-name="Godzina do">Godzina do</a>
+          <div style="display:flex; gap:6px;">
+            <select id="f_to_h"></select>
+            <select id="f_to_m"></select>
+          </div>
+        </label>
+      </div>
+  
+      <!-- 8. Parkietowe -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="Parkietowe">Parkietowe</a>
+        <input id="f_fee" type="text" placeholder="np. 30 PLN">
+      </label>
+  
+      <!-- 9. Organizator -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="Organizator">Organizator</a>
+        <input id="f_org" type="text">
+      </label>
+  
+      <!-- 10. TDj -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="TDj">TDj</a>
+        <input id="f_tdj" type="text">
+      </label>
+  
+      <!-- 11. Typ muzyki -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="Typ muzyki">Typ muzyki</a>
+        <input id="f_music" type="text" placeholder="np. klasyczna / nuevo / mix">
+      </label>
+  
+      <!-- 12. Link -->
+      <label class="form-row">
+        <a href="#" class="hint" data-name="Link">Link do wydarzenia/strony</a>
+        <input id="f_link" type="url" placeholder="https://...">
+      </label>
+  
+      <!-- 13. Informacja -->
+      <label class="form-row" style="grid-column:1/-1;">
+        <a href="#" class="hint" data-name="Informacja">Krótka informacja</a>
+        <textarea id="f_info" rows="3" placeholder="ważne szczegóły, np. dress code, parking..."></textarea>
+      </label>
+    </div>
+  
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+      <button id="submitCancelBtn" class="custom-button">Anuluj</button>
+      <button id="submitSendBtn"  class="custom-button">Zgłoś do dodania</button>
+    </div>
+  </div>
+  
+  <!-- Mały modal z podpowiedzią -->
+  <div id="hintModal" style="display:none;
+       position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+       background: lightgray; padding:16px; border:1px solid #ccc;
+       border-radius:8px; z-index:2003; width:min(90vw, 420px);">
+    <div id="hintTitle" style="font-weight:bold; margin-bottom:6px;">Tytuł</div>
+    <div id="hintText"  style="margin-bottom:12px;">Treść podpowiedzi…</div>
+    <div style="text-align:right;">
+      <button id="hintCloseBtn" class="custom-button">Zamknij</button>
+    </div>
   </div>
   
   <!-- Modal Ustawień -->
@@ -928,11 +1083,7 @@ if (weekdayMap.hasOwnProperty(dn)) {
 
   <script>
   // po kliknięciu w kopertę pokaż/ukryj tooltip
-  document.getElementById('emailPanel').onclick = e => {
-    e.stopPropagation();
-    const tip = document.getElementById('emailTooltip');
-    tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
-  };
+  window.openSubmitModal?.();
   
   // klik "Tak": zamknij tooltip i otwórz klienta pocztowego
   document.getElementById('emailYes').onclick = e => {
@@ -1018,26 +1169,35 @@ if (weekdayMap.hasOwnProperty(dn)) {
     );
   }
 
-  // 2) Przechwyć prompt i – gdy parametr settings=1 – wywołaj go od razu
-  let deferredPrompt;
-  window.addEventListener('beforeinstallprompt', e => {
+  // 2) Flaga z URL — czy mamy od razu pokazać modal Ustawień
+  const params = new URLSearchParams(window.location.search);
+  const wantInstall = params.get('settings') === '1';
+  if (wantInstall) {
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.style.display = 'block';   // pokaż modal natychmiast
+  }
+
+  // 3) Przechwyć beforeinstallprompt — zachowaj event do użycia po kliknięciu
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
 
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('settings') === '1') {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(choice => {
-        console.log('Install choice:', choice.outcome);
-        deferredPrompt = null;
-      });
+    // jeśli przyszliśmy z ?settings=1 i event dopiero teraz przyszedł — upewnij się, że modal jest otwarty
+    if (wantInstall) {
+      const modal = document.getElementById('settingsModal');
+      if (modal) modal.style.display = 'block';
     }
   });
 
-  // 3) Hook przycisk – nadal działa ręczne wywołanie
+  // 4) Przycisk w modalu
   document.getElementById('addShortcutBtn')
     .addEventListener('click', async () => {
-      if (!deferredPrompt) return;
+      if (!deferredPrompt) {
+        // fallback: np. iOS/Safari lub warunki nie są spełnione
+        alert('Jeśli nie widzisz natywnego okna instalacji, użyj menu przeglądarki: „Dodaj do ekranu głównego”.');
+        return;
+      }
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       console.log('Install choice:', outcome);
@@ -1095,6 +1255,8 @@ if (weekdayMap.hasOwnProperty(dn)) {
       });
     });
   </script>
+
+  <script src="form.js?v=3"></script>
   
 </body>
   
