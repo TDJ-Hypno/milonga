@@ -14,6 +14,43 @@
  
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+
+    /* Modal szczegółów dnia (nad kalendarzem) */
+    #dayDetailModal{
+      position: fixed;
+      left: 50%;
+      top: 60px;
+      transform: translateX(-50%);
+      width: min(92vw, 720px);
+      max-height: 78vh;
+      overflow: auto;
+      background: #fff;
+      border: 1px solid #999;
+      border-radius: 10px;
+      padding: 10px;
+      z-index: 3100; /* wyżej niż #calendarModal */
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      font-family: 'Arial Black', sans-serif;
+      font-size: 12px;
+    }
+    .daydetail-header{
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      margin-bottom:8px; position:sticky; top:0; background:#fff; z-index:1;
+    }
+    #dayDetailTitle{
+      font-weight: bold;
+      font-style: italic;
+      font-size: 16px;   /* było 12px w modalu -> +2 “oczka” (12→14→16) */
+    }
+    
+    .daydetail-content{ margin-bottom:8px; }
+    .daydetail-footer{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      position:sticky; bottom:0; background:#fff; padding-top:6px; border-top: 1px dashed #ccc;
+    }
+    .daydetail-counter{ min-width: 64px; text-align:center; }
+
+    
     #map { height: 100%; width: 100%; }
     
     #selectedFilter {
@@ -86,6 +123,51 @@
         width: 16px;
         height: 16px;
     }
+        
+    /* Modal kalendarza */
+    #calendarModal {
+      display:none;
+      position:fixed;
+      top:60px;
+      left:50%;
+      transform:translateX(-50%);
+      background: lightgray;
+      padding:16px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      z-index:2004;
+      width:min(92vw, 640px);
+      font-family:'Arial Black', sans-serif;
+      font-size:12px;
+      pointer-events: auto; z-index: 3000;
+    }
+    .cal-header {
+      display:flex; align-items:center; gap:6px; justify-content:center; margin-bottom:8px;
+    }
+    .cal-header .spacer { flex: 1 1 auto; }
+    .cal-header button {
+      padding: 2px 8px; border:1px solid #888; border-radius:6px; background:#fff; cursor:pointer;
+    }
+    #calTitle { font-weight:bold; min-width: 180px; text-align:center; }
+    
+    #calGrid {
+      display:grid; grid-template-columns: repeat(7, 1fr); gap:4px;
+    }
+    .cal-dayname {
+      text-align:center; padding:6px; background:#fff; border:1px solid #888; border-radius:6px;
+    }
+    .cal-cell {
+      min-height:48px;
+      padding:6px;
+      background:#fff;
+      border:1px solid #888;
+      border-radius:6px;
+      text-align:right;
+      position: relative;
+    }
+    .cal-other { opacity:.45; }
+    .cal-today { outline:2px solid red; outline-offset:-2px; font-weight:bold; }
+    .cal-footer { margin-top:8px; text-align:right; }
 
     #emailPanel .legend-icon {
       width: 56px;      /* ustaw pożądaną szerokość, np. 28–36 px */
@@ -93,6 +175,11 @@
       display: block;
     }
 
+    #calendarPanel .legend-icon {
+      width: 16px;   /* możesz zwiększyć/zmniejszyć: np. 28–48 px */
+      height: auto;
+      display: block;
+    }
     
     #contactTooltip {
       display: none;
@@ -235,6 +322,54 @@
       gap: 8px 12px;
     }
 
+    /* Kalendarz: dni z wydarzeniami */
+    .cal-has { position: relative; background: #fffef0; }
+    .cal-badge {
+      position: absolute; left: 6px; top: 6px;
+      font-size: 11px; line-height: 18px; padding: 0 6px;
+      background: #ffd54f; border: 1px solid #888; border-radius: 10px;
+    }
+
+    /* Kalendarz: dni z wydarzeniami (badge) */
+    .cal-has { position: relative; background: #fff3a6; }
+    .cal-badge {
+      position: absolute; left: 6px; top: 6px;
+      font-size: 11px; line-height: 18px; padding: 0 6px;
+      background: #ffd54f; border: 1px solid #888; border-radius: 10px;
+    }
+
+    /* Stopka kalendarza: checkboxy + Dziś w jednym wierszu */
+    .cal-footer { 
+      margin-top: 8px; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+    }
+    
+    /* Duża liczba na środku kratki */
+    .cal-count {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      font-weight: bold;
+      font-size: clamp(16px, 3.8vw, 24px);
+      line-height: 1;
+      pointer-events: none; /* nie przechwytuje klików */
+    }
+
+    /* Numer dnia w prawym górnym rogu */
+    .cal-daynum{
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      font-style: italic;
+      color: #0b5d1e;   /* ciemnozielony */
+    }
+    
+    /* Opcjonalne: delikatne podbicie tła dla dni z liczbą */
+    .cal-has { position: relative; }
+
     
   </style>
 </head>
@@ -262,9 +397,13 @@
   </div>
 
   <div id="map"></div>
-  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.190)</div>
+  <div class="info-panel">TDj "Hypno" Piotr Smoleń (0.207)</div>
 
-  <div class="info-panel" id="emailPanel" style="left: 250px;" onclick="window.openSubmitModal && window.openSubmitModal();">    
+  <div class="info-panel" id="calendarPanel" style="left: 220px;">
+    <img class="legend-icon" src="kalendarz.svg" alt="Kalendarz">
+  </div>
+  
+  <div class="info-panel" id="emailPanel" style="left: 265px;" onclick="window.openSubmitModal && window.openSubmitModal();">    
     <img class="legend-icon" src="dodaj.svg" alt="Dodaj wydarzenie">
   </div>
   
@@ -466,6 +605,47 @@
       <button id="hintCloseBtn" class="custom-button">Zamknij</button>
     </div>
   </div>
+
+  <!-- Modal Kalendarza -->
+    <div id="calendarModal">
+      <div class="cal-header">
+        <span class="spacer"></span>
+          <button id="calPrevYear"  type="button">«</button>
+          <button id="calPrevMonth" type="button">‹</button>
+          <span id="calTitle">Miesiąc RRRR</span>
+          <button id="calNextMonth" type="button">›</button>
+          <button id="calNextYear"  type="button">»</button>
+          <button id="calClose"     type="button" class="custom-button" style="margin-left:8px;">×</button>
+      </div>
+      <div id="calGrid"></div>
+      <div class="cal-footer" id="calLegend">
+        <label><input type="checkbox" id="calOptStart" checked> Start</label>
+        <label><input type="checkbox" id="calOptEnd"   checked> Stop</label>
+        <label><input type="checkbox" id="calOptMid"   checked> Trwa</label>
+        <div style="flex:1"></div>
+        <button id="calToday" type="button" class="custom-button">Dziś</button>
+      </div>
+    </div>
+  
+    <!-- Modal: Szczegóły wydarzeń w wybranym dniu (nad kalendarzem) -->
+  <div id="dayDetailModal" style="display:none;">
+    <div class="daydetail-header">
+      <div id="dayDetailTitle">Wydarzenia</div>
+      <button id="dayDetailClose" type="button" class="custom-button">×</button>
+    </div>
+  
+    <div id="dayDetailContent" class="daydetail-content">
+      <!-- tu wstrzykujemy stronę HTML konkretnego wydarzenia -->
+    </div>
+  
+    <div class="daydetail-footer">
+      <button id="dayNavFirst" type="button" class="custom-button">«</button>
+      <button id="dayNavPrev"  type="button" class="custom-button">‹</button>
+      <span id="dayNavCounter" class="daydetail-counter">1 / 1</span>
+      <button id="dayNavNext"  type="button" class="custom-button">›</button>
+      <button id="dayNavLast"  type="button" class="custom-button">»</button>
+    </div>
+  </div>
   
   <!-- Modal Ustawień -->
   <div id="settingsModal" style="display:none;
@@ -511,6 +691,22 @@
         keepSpiderfied: true
       });
       const spiderInfo = new google.maps.InfoWindow();
+
+      // Udostępnij otwieranie gotowych „stron” (używane przez kalendarz)
+      window.openPagesInInfoWindow = function(pages) {
+        if (!pages || !pages.length) return;
+        // pseudo-marker na potrzeby nawigacji « ‹ › »:
+        currentMarker = { infoPages: pages, customIndex: 0 };
+        spiderInfo.setContent(pages[0]);
+        // otwórz w środku mapy (bez zaczepienia do konkretnego markera)
+        if (map && map.getCenter) {
+          spiderInfo.setPosition(map.getCenter());
+        }
+        spiderInfo.open(map);
+      };
+
+      
+      window.spiderInfo = spiderInfo;
       oms.addListener('click', function(marker) {
         currentMarker = marker; // zapamiętaj, który marker ma otwarte InfoWindow
         const html = (marker.infoPages && marker.infoPages.length)
@@ -560,6 +756,7 @@
           if (currentMarker.customIndex !== len - 1) setPage(len - 1);
         });
       });
+
       
       loadData();
     }
@@ -705,6 +902,7 @@
           }
                     
           displayEvents(from, to);
+            if (window.refreshCalendar) window.refreshCalendar();
 
             // ➌ Po zastosowaniu filtra przywróć widok mapy z pierwszego uruchomienia
             if (initialCenter && typeof initialZoom === 'number') {
@@ -715,63 +913,82 @@
         });
     }
 
+    // helper: lokalna data YYYY-MM-DD (dla kalendarza)
+    function fmtYMDLocal(d) {
+      if (!d) return '';
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    
     function displayEvents(startDate, endDate) {
 
       // usuń stare markery
       markers.forEach(m => m.setMap(null));
       markers = [];
+
+      // kalendarz: wyzeruj listę aktualnych markerów (po filtrze/szukaj)
+      window._allMarkers = [];
       
       const now = new Date(), today = new Date(now); today.setHours(0,0,0,0);
       markers.forEach(m=>m.setMap(null)); markers=[];
       
       function fmtDate(s){ const d=new Date(s); return d.toISOString().replace(/-|:|\.\d{3}/g,''); }
 
-      // --- przygotuj listę wydarzeń z przeliczonymi datami ---
-      let items = eventsData.map(ev => {
-        // 1) parsujemy oryginalne daty
-        let s = new Date(ev['Data od']),
-            e = new Date(ev['Data do']);
-        // 2) recalc dla Dzien_tygodnia
-        const weekdayMap = {
-  niedziela:0, poniedziałek:1, wtorek:2,
-  środa:3, czwartek:4, piątek:5, sobota:6
-}; 
-let dn = (ev['Dzien_tygodnia']||'').toLowerCase().trim();
-if (weekdayMap.hasOwnProperty(dn)) {
-  const base = new Date(startDate);
-  base.setHours(0,0,0,0);
-  const origS = new Date(s), origE = new Date(e);
+      // 2) recalc dla Dzien_tygodnia
+      const normalize = (str) => (str || '').toLowerCase().trim()
+        .replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l')
+        .replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s').replace(/ż|ź/g,'z');
+      
+      const weekdayMap = {
+        niedziela:0, poniedzialek:1, wtorek:2,
+        sroda:3, czwartek:4, piatek:5, sobota:6
+      };
 
-  // parsujemy wykluczenia (lokalnie, bez pułapki UTC; obsługa , z/bez spacji i zakresów z |)
-  const parseYMDLocal = (str) => {
-    const [y, m, d] = str.trim().split(/[\.\-\/]/).map(n => parseInt(n, 10));
-    if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d); // lokalna północ
-  };
+      let items = eventsData.map(ev => {
+      // 1) start/koniec tego konkretnego rekordu
+      let s = new Date(ev['Data od']);
+      let e = new Date(ev['Data do']);
+    
+      // 2) dzień tygodnia (znormalizowany)
+      let dn = normalize(ev['Dzien_tygodnia']);
+      
+  // — WYKLUCZENIA — działają teraz dla KAŻDEGO wydarzenia —
+    const parseYMDLocal = (str) => {
+      const [y, m, d] = (str || '').trim().split(/[\.\-\/]/).map(n => parseInt(n, 10));
+      if (!y || !m || !d) return null;
+      return new Date(y, m - 1, d); // lokalna północ
+    };
   
-  let excluded = [];
-  const rawEx = (ev['Wyklucz'] || '').trim();
-  if (rawEx) {
-    const parts = rawEx.split(/\s*,\s*/); // dzielenie po przecinku z opcjonalnymi spacjami
-    for (const part of parts) {
-      if (!part) continue;
-      if (part.includes('|')) {
-        const [a, b] = part.split('|').map(parseYMDLocal);
-        if (a && b) {
-          const from = new Date(a); from.setHours(0, 0, 0, 0);
-          const to   = new Date(b); to.setHours(23, 59, 59, 999);
-          excluded.push({ from, to });
-        }
-      } else {
-        const d = parseYMDLocal(part);
-        if (d) {
-          const from = new Date(d); from.setHours(0, 0, 0, 0);
-          const to   = new Date(d); to.setHours(23, 59, 59, 999);
-          excluded.push({ from, to });
+    let excluded = [];
+    {
+      const rawEx = (ev['Wyklucz'] || '').trim();
+      if (rawEx) {
+        const parts = rawEx.split(/\s*,\s*/);
+        for (const part of parts) {
+          if (!part) continue;
+          if (part.includes('|')) {
+            const [a, b] = part.split('|').map(parseYMDLocal);
+            if (a && b) {
+              const from = new Date(a); from.setHours(0,0,0,0);
+              const to   = new Date(b); to.setHours(23,59,59,999);
+              excluded.push({ from, to });
+            }
+          } else {
+            const d = parseYMDLocal(part);
+            if (d) {
+              const from = new Date(d); from.setHours(0,0,0,0);
+              const to   = new Date(d); to.setHours(23,59,59,999);
+              excluded.push({ from, to });
+            }
+          }
         }
       }
     }
-  }
+        
+if (dn && weekdayMap.hasOwnProperty(dn)) {
+  const base = new Date(startDate);
+  base.setHours(0,0,0,0);
+  const origS = new Date(s), origE = new Date(e);
 
   // szukamy pierwszej dozwolonej daty zgodnej z dniem tygodnia
   let found = false;
@@ -798,7 +1015,13 @@ if (weekdayMap.hasOwnProperty(dn)) {
 
   if (!found) return null; // nie znaleziono dozwolonej daty – pomiń wydarzenie
 }
-        return { ev, s, e };
+      // Jednorazowe: jeśli data startu wpada w „Wyklucz” → pomiń
+      const sDayLocal = new Date(s); sDayLocal.setHours(0,0,0,0);
+      const isExcludedOnce = excluded.some(({from, to}) => sDayLocal >= from && sDayLocal <= to);
+      if (!dn && isExcludedOnce) return null;
+
+      
+      return { ev, s, e };
       })
       // 3) filtruj wg przedziału
       .filter(Boolean)
@@ -957,6 +1180,15 @@ if (weekdayMap.hasOwnProperty(dn)) {
         
         // --- Zbuduj wszystkie strony okienka dla tej grupy ---
         const infoPages = group.map((item, idx) => renderContent(item, idx));
+
+        // Metadane każdej strony (przydadzą się kalendarzowi)
+        const pagesMeta = group.map((item, idx) => ({
+          idx,
+          sYMD: fmtYMDLocal(item.s),
+          eYMD: fmtYMDLocal(item.e),
+          startHM: `${String(item.s.getHours()).padStart(2,'0')}:${String(item.s.getMinutes()).padStart(2,'0')}`
+        }));
+
         
         // --- Utwórz marker i podłącz do OMS ---
         const marker = new google.maps.Marker({
@@ -968,9 +1200,23 @@ if (weekdayMap.hasOwnProperty(dn)) {
           title:     tooltipTitle
         });
         
+        // — KALENDARZ: start/koniec (YYYY-MM-DD) i godzina startu (HH:MM) —
+        marker._startYMD  = fmtYMDLocal(s0);
+        marker._endYMD    = fmtYMDLocal(e0);
+        marker._startHM   = `${String(s0.getHours()).padStart(2,'0')}:${String(s0.getMinutes()).padStart(2,'0')}`;
+        
+        // (opcjonalnie zostawione ze starej wersji – nie szkodzi)
+        marker._eventDateYMD = fmtYMDLocal(s0);
+        
+        // Zapisz do globalnej listy widocznych markerów
+        window._allMarkers.push(marker);
+
+        
         // stan nawigacji dla markera
         marker.customIndex = 0;           // start od 1. wydarzenia (indeks 0)
         marker.infoPages   = infoPages;   // wszystkie „ekrany” okienka
+        marker._pagesMeta = pagesMeta;
+
         marker.customInfo  = infoPages[0];// zgodność wsteczna
 
         // ↓↓↓ DODANE: treść do wyszukiwania + (opcjonalnie) surowa grupa
@@ -1045,6 +1291,8 @@ if (weekdayMap.hasOwnProperty(dn)) {
           // 3) Dopisz do „Wybrano: …” informację o wyszukiwaniu
           const sel = document.getElementById('selectedFilter');
           sel.textContent = `${selectedFilterBase}, zawierające: ${qRaw} (znaleziono ${hits.length})`;
+          if (window.refreshCalendar) window.refreshCalendar();
+
         };
       
         searchBtn.addEventListener('click', runSearch);
@@ -1256,6 +1504,384 @@ if (weekdayMap.hasOwnProperty(dn)) {
     });
   </script>
 
+  <script>
+    (function(){
+      // Elementy
+      const calModal = document.getElementById('calendarModal');
+      const calTitle = document.getElementById('calTitle');
+      const calGrid  = document.getElementById('calGrid');
+      const btnOpen  = document.getElementById('calendarPanel');
+    
+      const btnPrevM = document.getElementById('calPrevMonth');
+      const btnNextM = document.getElementById('calNextMonth');
+      const btnPrevY = document.getElementById('calPrevYear');
+      const btnNextY = document.getElementById('calNextYear');
+      const btnToday = document.getElementById('calToday');
+      const btnClose = document.getElementById('calClose');
+
+      // Checkboxy: Start / Stop / Trwa
+      const optS = document.getElementById('calOptStart');
+      const optE = document.getElementById('calOptEnd');
+      const optM = document.getElementById('calOptMid');
+
+      // Modal szczegółów dnia (nad kalendarzem)
+      const dayDetailModal   = document.getElementById('dayDetailModal');
+      const dayDetailTitle   = document.getElementById('dayDetailTitle');
+      const dayDetailContent = document.getElementById('dayDetailContent');
+      const dayDetailClose   = document.getElementById('dayDetailClose');
+      const dayNavFirst = document.getElementById('dayNavFirst');
+      const dayNavPrev  = document.getElementById('dayNavPrev');
+      const dayNavNext  = document.getElementById('dayNavNext');
+      const dayNavLast  = document.getElementById('dayNavLast');
+      const dayNavCounter = document.getElementById('dayNavCounter');
+      
+      let dayDetailState = { pages: [], index: 0 };
+
+      
+      if (!calModal || !calTitle || !calGrid) return; // bezpieczeństwo
+    
+      // Stan
+      const monthNames = ['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+      const dayNames   = ['Pn','Wt','Śr','Cz','Pt','So','Nd']; // poniedziałek jako pierwszy
+      let cur = new Date();  // bieżący „widok” kalendarza (zmieniamy tu miesiąc/rok)
+
+      // Mapuje 'YYYY-MM-DD' -> { sOnly, mid, eOnly, single } liczone po KAŻDYM wydarzeniu (pg) w grupie
+      function getVisibleDayBuckets() {
+        const buckets = new Map();
+        const arr = window._allMarkers || [];
+      
+        const inc = (ymd, key) => {
+          const o = buckets.get(ymd) || { sOnly:0, mid:0, eOnly:0, single:0 };
+          o[key] = (o[key] || 0) + 1;
+          buckets.set(ymd, o);
+        };
+      
+        for (const mk of arr) {
+          if (!mk || typeof mk.getMap !== 'function' || !mk.getMap()) continue;
+          const meta = mk._pagesMeta || [];
+          for (const pg of meta) {
+            const s = pg.sYMD, e = pg.eYMD;
+            if (!s || !e) continue;
+      
+            if (s === e) {
+              // jednodniowe – tylko single
+              inc(s, 'single');
+              continue;
+            }
+      
+            // iteruj wszystkie dni od startu do końca (włącznie)
+            const start = new Date(s), end = new Date(e);
+            start.setHours(0,0,0,0); end.setHours(0,0,0,0);
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+              const ymd = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+              if (ymd === s) inc(ymd, 'sOnly');
+              else if (ymd === e) inc(ymd, 'eOnly');
+              else inc(ymd, 'mid');
+            }
+          }
+        }
+        return buckets;
+      }
+
+      // Zbuduj listę stron (HTML) dla danego dnia zgodnie z checkboxami Start/Stop/Trwa
+      function buildPagesForDay(ymd) {
+        const sOn = !!(optS?.checked);
+        const eOn = !!(optE?.checked);
+        const mOn = !!(optM?.checked);
+      
+        const pages = [];
+        const arr = window._allMarkers || [];
+      
+        for (const mk of arr) {
+          if (!mk || typeof mk.getMap !== 'function' || !mk.getMap()) continue;
+          const meta = mk._pagesMeta || [];
+          for (const pg of meta) {
+            const s = pg.sYMD, e = pg.eYMD;
+            if (!s || !e) continue;
+      
+            const isSingle    = (s === ymd && e === ymd);
+            const isStartOnly = (s === ymd && e !== ymd);
+            const isEndOnly   = (e === ymd && s !== ymd);
+            const isMid       = (s < ymd && ymd < e); // porównanie leksykalne działa dla RRRR-MM-DD
+      
+            // baza wg Start/Stop (jak w licznikach)
+            const base = (sOn && eOn) ? isSingle
+                       : (sOn ? (isStartOnly || isSingle)
+                              : (eOn ? (isEndOnly || isSingle) : false));
+      
+            const include = base || (mOn && isMid); // "Trwa" zawsze dodaje dni pośrednie
+      
+            if (include && mk.infoPages && mk.infoPages[pg.idx]) {
+              pages.push({ html: mk.infoPages[pg.idx], key: `${s} ${pg.startHM || ''}` });
+            }
+          }
+        }
+      
+        // sort rosnąco po dacie/godzinie startu
+        pages.sort((a,b) => a.key.localeCompare(b.key));
+        return pages.map(p => p.html);
+      }
+      
+      // Fraza do tytułu w zależności od kombinacji checkboxów
+      function getCalPhrase() {
+        const sOn = !!(optS?.checked);
+        const eOn = !!(optE?.checked);
+        const mOn = !!(optM?.checked);
+        if (sOn && !eOn && !mOn) return 'rozpoczynają się';
+        if (!sOn && eOn && !mOn) return 'kończą się';
+        if (!sOn && !eOn && mOn) return 'trwają';
+        if (sOn && eOn && !mOn)  return 'rozpoczynają się i kończą ';
+        if (sOn && !eOn && mOn)  return 'rozpoczynają się lub trwają';
+        if (!sOn && eOn && mOn)  return 'kończą się lub trwają';
+        if (sOn && eOn && mOn)   return 'kończą i zaczynają się lub trwają';
+        return 'spełniają wybrane warunki';
+      }
+
+      function setDayDetailPage(i){
+        const n = dayDetailState.pages.length;
+        if (i < 0 || i >= n) return;
+        dayDetailState.index = i;
+        dayDetailContent.innerHTML = dayDetailState.pages[i];
+        dayNavCounter.textContent = `${i+1} / ${n}`;
+      
+        // podłącz lokalną nawigację jeśli w HTML strony są przyciski first/prev/next/last
+        const byId = id => document.getElementById(id);
+        const firstBtn = byId('firstEventBtn');
+        const prevBtn  = byId('prevEventBtn');
+        const nextBtn  = byId('nextEventBtn');
+        const lastBtn  = byId('lastEventBtn');
+      
+        const go = (idx) => setDayDetailPage(idx);
+      
+        if (firstBtn) { firstBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (dayDetailState.index !== 0) go(0); }); }
+        if (prevBtn)  { prevBtn .addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (dayDetailState.index > 0) go(dayDetailState.index-1); }); }
+        if (nextBtn)  { nextBtn .addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (dayDetailState.index < n-1) go(dayDetailState.index+1); }); }
+        if (lastBtn)  { lastBtn .addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (dayDetailState.index !== n-1) go(n-1); }); }
+      }
+      
+      function openDayDetail(pages, title){
+        if (!pages || !pages.length) return;
+        dayDetailState = { pages: pages.slice(), index: 0 };
+        dayDetailTitle.textContent = title || 'Wydarzenia';
+        dayDetailModal.style.display = 'block';
+        setDayDetailPage(0);
+      }
+      
+      function closeDayDetail(){
+        dayDetailModal.style.display = 'none';
+      }
+      
+      // przyciski na dole modala
+      dayDetailClose?.addEventListener('click', () => closeDayDetail());
+      dayNavFirst   ?.addEventListener('click', () => setDayDetailPage(0));
+      dayNavPrev    ?.addEventListener('click', () => setDayDetailPage(dayDetailState.index - 1));
+      dayNavNext    ?.addEventListener('click', () => setDayDetailPage(dayDetailState.index + 1));
+      dayNavLast    ?.addEventListener('click', () => setDayDetailPage(dayDetailState.pages.length - 1));
+      window.addEventListener('keydown', (e)=>{ if (e.key==='Escape') closeDayDetail(); });
+
+      
+      cur.setDate(1);        // ustaw na 1. dzień miesiąca
+    
+      function renderCalendar(d) {
+        const y = d.getFullYear();
+        const m = d.getMonth();
+    
+        // Tytuł
+        calTitle.textContent = `${monthNames[m]} ${y}`;
+    
+        // Wyczyszczenie siatki
+        calGrid.innerHTML = '';
+
+        const buckets = getVisibleDayBuckets();
+        const pad = n => String(n).padStart(2,'0');
+        
+        // Nagłówki dni
+        for (const dn of dayNames) {
+          const el = document.createElement('div');
+          el.className = 'cal-dayname';
+          el.textContent = dn;
+          calGrid.appendChild(el);
+        }
+    
+        // Indeks pierwszego dnia (pon=0 … nd=6)
+        const first = new Date(y, m, 1);
+        const startIdx = (first.getDay() + 6) % 7; // getDay(): nd=0 → chcemy pn=0
+    
+        const daysInMonth = new Date(y, m+1, 0).getDate();
+        const daysPrev    = new Date(y, m,   0).getDate();
+    
+        // Ile pustych z poprzedniego miesiąca
+        const leading = startIdx;
+    
+        // 6 tygodni * 7 kolumn = 42 komórki (wystarcza na każdy układ)
+        const totalCells = 42;
+    
+        // Dziś (do podświetlenia)
+        const today = new Date(); today.setHours(0,0,0,0);
+    
+        for (let i=0; i<totalCells; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'cal-cell';
+    
+          let dayNum, inThisMonth = true;
+          if (i < leading) {
+            // poprzedni miesiąc
+            dayNum = daysPrev - leading + 1 + i;
+            inThisMonth = false;
+          } else if (i < leading + daysInMonth) {
+            // bieżący miesiąc
+            dayNum = i - leading + 1;
+          } else {
+            // następny miesiąc
+            dayNum = i - (leading + daysInMonth) + 1;
+            inThisMonth = false;
+          }
+    
+          // data tej komórki (do „dziś”)
+          let cellDate;
+          if (i < leading) {
+            const prevM = (m - 1 + 12) % 12;
+            const prevY = (m === 0) ? y - 1 : y;
+            cellDate = new Date(prevY, prevM, dayNum);
+          } else if (i < leading + daysInMonth) {
+            cellDate = new Date(y, m, dayNum);
+          } else {
+            const nextM = (m + 1) % 12;
+            const nextY = (m === 11) ? y + 1 : y;
+            cellDate = new Date(nextY, nextM, dayNum);
+          }
+          cellDate.setHours(0,0,0,0);
+    
+          const dnEl = document.createElement('span');
+          dnEl.className = 'cal-daynum';
+          dnEl.textContent = dayNum;
+          cell.appendChild(dnEl);
+
+          if (!inThisMonth) cell.classList.add('cal-other');
+          if (cellDate.getTime() === today.getTime()) {
+            cell.classList.add('cal-today');
+          }
+
+          // Jedna duża liczba wg. Start/Stop/Trwa
+          const ymd = `${cellDate.getFullYear()}-${String(cellDate.getMonth()+1).padStart(2,'0')}-${String(cellDate.getDate()).padStart(2,'0')}`;
+          cell.dataset.ymd = ymd;
+          const b = buckets.get(ymd) || { sOnly:0, mid:0, eOnly:0, single:0 };
+          
+          const sOn = !!(optS?.checked);
+          const eOn = !!(optE?.checked);
+          const mOn = !!(optM?.checked);
+          
+          let total = 0;
+          if (sOn && eOn) { 
+            // tylko jednodniowe
+            total += b.single;
+          } else if (sOn && !eOn) {
+            // starty (wlicz jednodniowe jako start)
+            total += b.sOnly + b.single;
+          } else if (!sOn && eOn) {
+            // końce (wlicz jednodniowe jako koniec)
+            total += b.eOnly + b.single;
+          } else {
+            // nic nie zaznaczono z S/E → licz tylko "Trwa" (jeśli włączone)
+          }
+          
+          // dorzuć "Trwa" jeśli zaznaczone
+          if (mOn) total += b.mid;
+
+          cell.dataset.total = String(total);
+          
+          // wstaw liczbę na środku kratki (bez kółka)
+          if (total > 0) {
+            cell.classList.add('cal-has');
+            const cnt = document.createElement('div');
+            cnt.className = 'cal-count';
+            cnt.textContent = (total > 99) ? '99+' : String(total);
+            cell.appendChild(cnt);
+          }
+          
+          calGrid.appendChild(cell);
+        }
+      }
+    
+      // Otwieranie modala
+      if (btnOpen) {
+        const open = (e) => { e?.preventDefault?.(); e?.stopPropagation?.(); calModal.style.display = 'block'; renderCalendar(cur); };
+        btnOpen.addEventListener('click', open);
+        btnOpen.addEventListener('touchend', open, { passive:false });
+      }
+    
+      // Nawigacja
+      btnPrevM ?.addEventListener('click', () => { 
+        cur.setMonth(cur.getMonth() - 1); 
+        renderCalendar(cur); 
+      });
+      btnNextM ?.addEventListener('click', () => { 
+        cur.setMonth(cur.getMonth() + 1); 
+        renderCalendar(cur); 
+      });
+      btnPrevY ?.addEventListener('click', () => { 
+        cur.setFullYear(cur.getFullYear() - 1); 
+        renderCalendar(cur); 
+      });
+      btnNextY ?.addEventListener('click', () => { 
+        cur.setFullYear(cur.getFullYear() + 1); 
+        renderCalendar(cur); 
+      });
+      btnToday ?.addEventListener('click', () => { 
+        const t = new Date(); 
+        cur.setFullYear(t.getFullYear(), t.getMonth(), 1); 
+        renderCalendar(cur); 
+      });
+      
+      // Zamknięcie
+      btnClose ?.addEventListener('click', () => { 
+        calModal.style.display = 'none'; 
+      });
+
+      // Zmiana opcji → przerysuj kalendarz
+      optS?.addEventListener('change', () => renderCalendar(cur));
+      optE?.addEventListener('change', () => renderCalendar(cur));
+      optM?.addEventListener('change', () => renderCalendar(cur));
+    
+      // Klik w tło modala — jeśli chcesz zamykać (opcjonalnie, gdy modal ma tło/overlay)
+      // calModal.addEventListener('click', (e)=>{ if(e.target===calModal) calModal.style.display='none'; });
+
+      // Klik w komórkę kalendarza → otwórz szczegóły
+      calGrid.addEventListener('click', (e) => {
+        const cell = e.target.closest('.cal-cell');
+        if (!cell) return;
+        const total = parseInt(cell.dataset.total || '0', 10);
+        if (!total) return;
+      
+        const ymd = cell.dataset.ymd;
+        if (!ymd) return;
+      
+        const pages = buildPagesForDay(ymd);
+        if (!pages.length) return;
+      
+        const phrase = getCalPhrase(); // "rozpoczynają się" / "kończą się" / "trwają" / itd.
+        const dateTxt = ymd.replace(/-/g, '.');
+        const title = `Wydarzenia, które ${phrase} w dniu ${dateTxt}`;
+      
+          // tytuł pokazujemy w headerze nowego modala
+          // a strony wstrzykujemy bezpośrednio (bez dolepiania tytułu do każdej)
+          openDayDetail(pages, title);
+
+      });
+
+      
+      // Publiczny odświeżacz – wołaj po filtrze/szukaj, jeśli modal jest otwarty
+      window.refreshCalendar = function(){
+        if (calModal && calModal.style.display === 'block') {
+          renderCalendar(cur);
+        }
+      };
+
+      
+    })();
+    </script>
+
+  
   <script src="form.js?v=3"></script>
   
 </body>
